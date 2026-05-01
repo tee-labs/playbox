@@ -59,4 +59,3 @@ jobs:
           CONTEXT7_API_KEY: ${{ secrets.CONTEXT7_API_KEY }}
         with:
           model: ${{ secrets.DEFAULT_MODEL || 'x-openai/ark-code-latest' }}
-        timeout-minutes: 60
