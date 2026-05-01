@@ -259,21 +259,22 @@ export default function KVAdminPage() {
       )}
 
       <Card style={{ marginBottom: 16 }}>
-        <Space size="large" align="center" wrap>
-          <DatabaseOutlined style={{ fontSize: 24, color: '#1890ff' }} />
-          <NamespaceSelector
-            namespaces={namespaces}
-            selected={selectedNamespace}
-            onChange={(ns) => {
-              setSelectedNamespace(ns);
-              setPrefix('');
-              setSelectedRowKeys([]);
-            }}
-            loading={loading}
-          />
-          <Space.Compact>
+        <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+            <DatabaseOutlined style={{ fontSize: 24, color: '#1890ff' }} />
+            <NamespaceSelector
+              namespaces={namespaces}
+              selected={selectedNamespace}
+              onChange={(ns) => {
+                setSelectedNamespace(ns);
+                setPrefix('');
+                setSelectedRowKeys([]);
+              }}
+              loading={loading}
+            />
+          </div>
+          <Space.Compact style={{ width: '100%', maxWidth: 400 }}>
             <Input
-              style={{ width: 250 }}
               placeholder="Filter by prefix..."
               value={prefix}
               onChange={(e) => setPrefix(e.target.value)}
@@ -286,8 +287,7 @@ export default function KVAdminPage() {
               Clear
             </Button>
           </Space.Compact>
-          <div style={{ flex: 1 }} />
-          <Space>
+          <Space wrap>
             <Button icon={<ReloadOutlined />} onClick={handleRefresh}>
               Refresh
             </Button>
@@ -314,16 +314,18 @@ export default function KVAdminPage() {
         </div>
       )}
 
-      <Table
-        columns={columns}
-        dataSource={keys}
-        rowKey="name"
-        loading={loading && keys.length === 0}
-        rowSelection={rowSelection}
-        pagination={false}
-        scroll={{ y: 'calc(100vh - 350px)' }}
-        size="small"
-      />
+      <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+        <Table
+          columns={columns}
+          dataSource={keys}
+          rowKey="name"
+          loading={loading && keys.length === 0}
+          rowSelection={rowSelection}
+          pagination={false}
+          scroll={{ x: 600, y: 'calc(100vh - 350px)' }}
+          size="small"
+        />
+      </div>
 
       {!listComplete && (
         <div style={{ textAlign: 'center', marginTop: 16 }}>

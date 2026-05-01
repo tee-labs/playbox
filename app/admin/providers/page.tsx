@@ -423,7 +423,7 @@ export default function ProvidersPage() {
 
   return (
     <div>
-      <Space style={{ marginBottom: '16px' }}>
+      <Space style={{ marginBottom: '16px' }} wrap>
         <Tag onClick={fetchProviders} style={{ cursor: 'pointer' }}>
           Refresh
         </Tag>
@@ -439,9 +439,9 @@ export default function ProvidersPage() {
       <Modal
         title={
           modalProvider ? (
-            <Space>
+            <Space size="small" wrap>
               <AppstoreOutlined />
-              <span>{modalProvider.provider} - 全部模型</span>
+              <span style={{ fontSize: '14px' }}>{modalProvider.provider} - 全部模型</span>
               <Tag color={familyColors[modalProvider.family]}>{familyLabels[modalProvider.family]}</Tag>
             </Space>
           ) : (
@@ -451,8 +451,9 @@ export default function ProvidersPage() {
         open={modalOpen}
         onCancel={closeModal}
         footer={null}
-        width={800}
+        width={window.innerWidth < 768 ? '95%' : 800}
         destroyOnClose
+        styles={{ body: { maxHeight: '70vh', overflowY: 'auto' } }}
       >
         {modalLoading ? (
           <div style={{ display: 'flex', justifyContent: 'center', padding: '40px 0' }}>
