@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { ConfigProvider, App as AntApp, Layout, Menu, Typography, Button } from 'antd';
+import { useState, useEffect } from 'react';
+import { ConfigProvider, App as AntApp, Layout, Menu, Typography, Button, Drawer } from 'antd';
 import {
   DatabaseOutlined,
   CloudOutlined,
@@ -171,6 +171,15 @@ const CONTENT_STYLE = {
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const getSelectedKey = () => {
     for (const [path, key] of Object.entries(PATH_KEY_MAP)) {
@@ -186,6 +195,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return PAGE_TITLE_MAP[key] || 'Database Management';
   };
 
+  const handleMenuClick = () => {
+    if (isMobile) setDrawerOpen(false);
+  };
+
   return (
     <ConfigProvider
       theme={{
@@ -197,34 +210,58 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <VConsole />
       <AntApp>
         <Layout style={{ minHeight: '100vh' }}>
-          <Sider width={220} theme="light" collapsible collapsed={collapsed} onCollapse={setCollapsed} trigger={null} style={SIDER_STYLE}>
-            <div style={{ ...BRAND_STYLE, justifyContent: collapsed ? 'center' : 'flex-start' }}>
-              <Title level={4} style={TITLE_STYLE}>
-                <DatabaseOutlined style={{ marginRight: 8 }} />
-                {!collapsed && 'Admin'}
-              </Title>
-              <Button
-                type="text"
-                icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-                onClick={() => setCollapsed(!collapsed)}
-                style={{
-                  position: collapsed ? 'absolute' : 'relative',
-                  right: collapsed ? 8 : 'auto',
-                  top: collapsed ? '50%' : 'auto',
-                  transform: collapsed ? 'translateY(-50%)' : 'none',
-                }}
-              />
-            </div>
-            <Menu mode="inline" selectedKeys={[getSelectedKey()]} items={menuItems} inlineCollapsed={collapsed} />
-          </Sider>
+          {!isMobile && (
+            <Sider width={220} theme="light" collapsible collapsed={collapsed} onCollapse={setCollapsed} trigger={null} style={SIDER_STYLE}>
+              <div style={{ ...BRAND_STYLE, justifyContent: collapsed ? 'center' : 'flex-start' }}>
+                <Title level={4} style={TITLE_STYLE}>
+                  <DatabaseOutlined style={{ marginRight: 8 }} />
+                  {!collapsed && 'Admin'}
+                </Title>
+                <Button
+                  type="text"
+                  icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+                  onClick={() => setCollapsed(!collapsed)}
+                  style={{
+                    position: collapsed ? 'absolute' : 'relative',
+                    right: collapsed ? 8 : 'auto',
+                    top: collapsed ? '50%' : 'auto',
+                    transform: collapsed ? 'translateY(-50%)' : 'none',
+                  }}
+                />
+              </div>
+              <Menu mode="inline" selectedKeys={[getSelectedKey()]} items={menuItems} inlineCollapsed={collapsed} />
+            </Sider>
+          )}
+          {isMobile && (
+            <Drawer
+              title="Admin"
+              placement="left"
+              closable
+              onClose={() => setDrawerOpen(false)}
+              open={drawerOpen}
+              width={250}
+            >
+              <Menu mode="inline" selectedKeys={[getSelectedKey()]} items={menuItems} onClick={handleMenuClick} />
+            </Drawer>
+          )}
           <Layout>
-            <Header style={HEADER_STYLE}>
-              <Title level={4} style={{ margin: 0 }}>
+            <Header style={{ ...HEADER_STYLE, padding: isMobile ? '0 12px' : '0 24px' }}>
+              {isMobile && (
+                <Button
+                  type="text"
+                  icon={<MenuUnfoldOutlined />}
+                  onClick={() => setDrawerOpen(true)}
+                  style={{ marginRight: 12 }}
+                />
+              )}
+              <Title level={isMobile ? 5 : 4} style={{ margin: 0, flex: 1 }}>
                 {getPageTitle()}
               </Title>
               <ReferralBadge />
             </Header>
-            <Content style={CONTENT_STYLE}>{children}</Content>
+            <Content style={{ ...CONTENT_STYLE, margin: isMobile ? '12px' : '24px', padding: isMobile ? '12px' : '24px' }}>
+              {children}
+            </Content>
           </Layout>
         </Layout>
       </AntApp>

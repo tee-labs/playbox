@@ -106,33 +106,48 @@ export default function DataTable({
           </Popconfirm>
         </div>
       )}
-      <Table
-        columns={tableColumns}
-        dataSource={rows}
-        rowKey="_rowid"
-        loading={loading}
-        rowSelection={rowSelection}
-        pagination={{
-          current: pagination.page,
-          pageSize: pagination.pageSize,
-          total: pagination.total,
-          showSizeChanger: true,
-          showQuickJumper: true,
-          showTotal: (total) => `Total ${total} rows`,
-          onChange: onPageChange,
-        }}
-        onChange={(pagination, filters, sorter: SorterResult<TableRow> | SorterResult<TableRow>[]) => {
-          const singleSorter = Array.isArray(sorter) ? sorter[0] : sorter;
-          if (singleSorter.field) {
-            onSort(
-              singleSorter.field as string,
-              singleSorter.order === 'ascend' ? 'asc' : singleSorter.order === 'descend' ? 'desc' : null
-            );
+      <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+        <Table
+          columns={tableColumns}
+          dataSource={rows}
+          rowKey="_rowid"
+          loading={loading}
+          rowSelection={rowSelection}
+          pagination={{
+            current: pagination.page,
+            pageSize: pagination.pageSize,
+            total: pagination.total,
+            showSizeChanger: true,
+            showQuickJumper: true,
+            showTotal: (total) => `Total ${total} rows`,
+            onChange: onPageChange,
+            size: 'small',
+            responsive: true,
+          }}
+          onChange={(pagination, filters, sorter: SorterResult<TableRow> | SorterResult<TableRow>[]) => {
+            const singleSorter = Array.isArray(sorter) ? sorter[0] : sorter;
+            if (singleSorter.field) {
+              onSort(
+                singleSorter.field as string,
+                singleSorter.order === 'ascend' ? 'asc' : singleSorter.order === 'descend' ? 'desc' : null
+              );
+            }
+          }}
+          scroll={{ x: 800 }}
+          size="small"
+        />
+      </div>
+      <style jsx>{`
+        @media (max-width: 768px) {
+          div::-webkit-scrollbar {
+            height: 4px;
           }
-        }}
-        scroll={{ x: 'max-content' }}
-        size="small"
-      />
+          div::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 2px;
+          }
+        }
+      `}</style>
     </div>
   );
 }

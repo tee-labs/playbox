@@ -347,21 +347,22 @@ export default function R2AdminPage() {
       )}
 
       <Card style={{ marginBottom: 16 }}>
-        <Space size="large" align="center" wrap>
-          <CloudServerOutlined style={{ fontSize: 24, color: '#1890ff' }} />
-          <NamespaceSelector
-            namespaces={buckets}
-            selected={selectedBucket}
-            onChange={(b) => {
-              setSelectedBucket(b);
-              setPrefix('');
-              setSelectedRowKeys([]);
-            }}
-            loading={loading}
-          />
-          <Space.Compact>
+        <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+            <CloudServerOutlined style={{ fontSize: 24, color: '#1890ff' }} />
+            <NamespaceSelector
+              namespaces={buckets}
+              selected={selectedBucket}
+              onChange={(b) => {
+                setSelectedBucket(b);
+                setPrefix('');
+                setSelectedRowKeys([]);
+              }}
+              loading={loading}
+            />
+          </div>
+          <Space.Compact style={{ width: '100%', maxWidth: 500 }}>
             <Input
-              style={{ width: 300 }}
               placeholder="Filter by prefix..."
               value={prefix}
               onChange={(e) => setPrefix(e.target.value)}
@@ -374,8 +375,7 @@ export default function R2AdminPage() {
               Clear
             </Button>
           </Space.Compact>
-          <div style={{ flex: 1 }} />
-          <Space>
+          <Space wrap>
             <Button icon={<ReloadOutlined />} onClick={handleRefresh}>
               Refresh
             </Button>
@@ -387,16 +387,16 @@ export default function R2AdminPage() {
       </Card>
 
       {prefix && (
-        <Card style={{ marginBottom: 16 }}>
-          <Space>
-            <Button onClick={() => setPrefix('')}>Root</Button>
+        <Card style={{ marginBottom: 16, overflowX: 'auto' }}>
+          <Space wrap>
+            <Button onClick={() => setPrefix('')} size="small">Root</Button>
             {prefix
               .split('/')
               .filter(Boolean)
               .map((part, idx, arr) => (
                 <span key={idx}>
                   <span> / </span>
-                  <Button type="link" onClick={() => setPrefix(arr.slice(0, idx + 1).join('/') + '/')}>
+                  <Button type="link" onClick={() => setPrefix(arr.slice(0, idx + 1).join('/') + '/')} size="small">
                     {part}
                   </Button>
                 </span>
@@ -418,16 +418,18 @@ export default function R2AdminPage() {
         </div>
       )}
 
-      <Table
-        columns={columns}
-        dataSource={objects}
-        rowKey="key"
-        loading={loading && objects.length === 0}
-        rowSelection={rowSelection}
-        pagination={false}
-        scroll={{ y: 'calc(100vh - 400px)' }}
-        size="small"
-      />
+      <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+        <Table
+          columns={columns}
+          dataSource={objects}
+          rowKey="key"
+          loading={loading && objects.length === 0}
+          rowSelection={rowSelection}
+          pagination={false}
+          scroll={{ x: 700, y: 'calc(100vh - 400px)' }}
+          size="small"
+        />
+      </div>
 
       {truncated && (
         <div style={{ textAlign: 'center', marginTop: 16 }}>

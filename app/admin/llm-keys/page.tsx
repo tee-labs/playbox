@@ -232,7 +232,7 @@ export default function LLMKeysAdminPage() {
           description={
             <div>
               <p style={{ margin: '0 0 8px 0' }}>Copy this key now. You will not be able to see it again.</p>
-              <code style={{ display: 'block', padding: 8, background: '#f5f5f5', borderRadius: 4, fontFamily: 'monospace' }}>
+              <code style={{ display: 'block', padding: 8, background: '#f5f5f5', borderRadius: 4, fontFamily: 'monospace', wordBreak: 'break-all' }}>
                 {newKeyData.api_key}
               </code>
             </div>
@@ -245,30 +245,34 @@ export default function LLMKeysAdminPage() {
       )}
 
       <Card style={{ marginBottom: 16 }}>
-        <Space align="center" style={{ width: '100%', justifyContent: 'space-between' }}>
-          <Title level={5} style={{ margin: 0 }}>
-            Total API Keys: {keys.length}
-          </Title>
-          <Space>
-            <Button icon={<ReloadOutlined />} onClick={fetchKeys}>
-              Refresh
-            </Button>
-            <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
-              Create New Key
-            </Button>
-          </Space>
+        <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+            <Title level={5} style={{ margin: 0 }}>
+              Total API Keys: {keys.length}
+            </Title>
+            <Space wrap>
+              <Button icon={<ReloadOutlined />} onClick={fetchKeys} size="middle">
+                Refresh
+              </Button>
+              <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate} size="middle">
+                Create New Key
+              </Button>
+            </Space>
+          </div>
         </Space>
       </Card>
 
-      <Table
-        columns={columns}
-        dataSource={keys}
-        rowKey="id"
-        loading={loading}
-        pagination={false}
-        scroll={{ y: 'calc(100vh - 350px)' }}
-        size="small"
-      />
+      <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', marginBottom: 16 }}>
+        <Table
+          columns={columns}
+          dataSource={keys}
+          rowKey="id"
+          loading={loading}
+          pagination={false}
+          scroll={{ x: 800, y: 'calc(100vh - 350px)' }}
+          size="small"
+        />
+      </div>
 
       <CreateKeyModal open={createModalOpen} onClose={() => setCreateModalOpen(false)} onSuccess={handleCreateSuccess} />
     </div>
