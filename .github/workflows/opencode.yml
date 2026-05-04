@@ -54,8 +54,10 @@ jobs:
       - name: Run opencode
         uses: anomalyco/opencode/github@latest
         env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
           API_KEY: ${{ secrets.API_KEY }}
           TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
           CONTEXT7_API_KEY: ${{ secrets.CONTEXT7_API_KEY }}
         with:
+          use_github_token: true
           model: ${{ secrets.DEFAULT_MODEL || 'x-openai/ark-code-latest' }}
