@@ -158,6 +158,85 @@ caching, R2 object storage, download proxy with SSRF protection, and Cloudflare 
 - **DO NOT** skip table validation — use `validateTable()` before all D1 operations
 - **DO NOT** use raw column names in SQL — always use `escapeColumnName()`
 
+## DESIGN SYSTEM
+
+**Full spec:** [`DESIGN.md`](./DESIGN.md) — the single source of truth for all visual design tokens and UI patterns.
+**Read it before writing any UI code.**
+
+### Core Principles
+
+- **Flat design** — no `box-shadow` anywhere. Use borders (`1px solid #f0f0f0`) and background contrast for hierarchy.
+- **Information-dense** — prioritize data density and scan speed over decorative aesthetics.
+- **Ant Design defaults** — use Ant Design components as-is, override only via `ConfigProvider` tokens in
+  `app/admin/layout.tsx`.
+- **Light-only** — no dark mode variants.
+
+### Color Tokens (quick reference)
+
+| Token            | Hex       | Use                                     |
+| ---------------- | --------- | --------------------------------------- |
+| `primary`        | `#1890ff` | Buttons, links, active states, icons    |
+| `on-surface`     | `#0f172a` | Primary text, headings                  |
+| `text-secondary` | `#666666` | Muted body text, secondary labels       |
+| `border`         | `#f0f0f0` | All dividers, card borders, separators  |
+| `surface`        | `#ffffff` | Card backgrounds, content areas, modals |
+| `surface-subtle` | `#fafafa` | Hovered rows, subtle backgrounds        |
+| `error`          | `#ff4d4f` | Error text, danger buttons              |
+| `error-deep`     | `#f5222d` | Error alert text, strong error emphasis |
+| `warning`        | `#faad14` | Warning indicators                      |
+| `success`        | `#52c41a` | Success states                          |
+
+**Chart palette** (8 colors, use in order): `#1890ff` → `#52c41a` → `#faad14` → `#f5222d` → `#722ed1` → `#13c2c2` →
+`#eb2f96` → `#fa8c16`
+
+### Typography (quick reference)
+
+- **System font stack** only — no custom web fonts:
+  `-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif`
+- **Monospace** for code/JSON/API keys: `'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace`
+- Page titles: 24px/600 · Section headers: 20px/600 · Body: 14px/400 · Labels: 14px/500
+
+### Spacing Scale
+
+`xs: 4px` · `sm: 8px` · `md: 12px` · `base: 16px` · `lg: 24px` · `xl: 32px`
+
+- Desktop content padding: `24px` (`spacing.lg`)
+- Mobile content padding: `12px` (`spacing.md`) — breakpoint at `768px`
+- Grid gutter: `16px` (`spacing.base`)
+
+### Rounding Scale
+
+`sm: 3px` · `md: 4px` (buttons, inputs, alerts) · `lg: 8px` (cards, modals, tables) · `xl: 12px` (badges) ·
+`full: 9999px` (pills, avatars)
+
+### Component Rules
+
+- **Button**: 32px height, `rounded.md` (4px). Primary = solid blue. Default = white with border. Danger = red text →
+  red fill on hover.
+- **Table**: Small size, white bg, responsive columns with `ellipsis`, bordered variant, no row shadows.
+- **Card**: White bg, `rounded.lg` (8px), no shadow — borders only when separation needed.
+- **Modal**: White bg, `rounded.lg` (8px), confirm/cancel footer.
+- **Input**: White fill, `rounded.md` (4px), 32px height.
+- **Sidebar**: 220px fixed width, white bg, collapsible, `1px solid #f0f0f0` right border.
+- **Header**: 64px height, white bg, `1px solid #f0f0f0` bottom border.
+
+### Do's and Don'ts
+
+- **Do** use `#f0f0f0` for all separators and card borders
+- **Do** keep content within white cards on the gray page background
+- **Do** use `monospace` typography for code, JSON, API keys
+- **Don't** add `box-shadow` — flat design only
+- **Don't** hardcode hex values inline — reference these tokens
+- **Don't** use primary color for decorative/non-interactive elements
+- **Don't** use `rounded.full` on rectangular elements — reserved for pills/avatars
+
+### When Building UI
+
+1. Check `DESIGN.md` for the full token spec and component patterns
+2. Use existing `ConfigProvider` theme in `app/admin/layout.tsx` — don't override per-component unless necessary
+3. Follow the spacing scale — don't introduce arbitrary values
+4. Match the flat aesthetic — borders and contrast, never shadows
+
 ## UNIQUE STYLES
 
 - **Multi-protocol**: Supports OpenAI, Anthropic, Google, Gemini CLI formats

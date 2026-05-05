@@ -1,10 +1,13 @@
 # Playbox - AI API Gateway & Protocol Converter
 
-AI API Gateway & Protocol Converter — converts between AI provider protocols (OpenAI, Anthropic, Google, Gemini CLI) on Next.js with Cloudflare Workers deployment.
+AI API Gateway & Protocol Converter — converts between AI provider protocols (OpenAI, Anthropic, Google, Gemini CLI) on
+Next.js with Cloudflare Workers deployment.
 
 ## Overview
 
-Playbox is a Next.js-based API gateway that translates between different AI provider protocols. It allows you to use a single API endpoint to interact with multiple AI providers, handling protocol conversion, authentication, and token management automatically.
+Playbox is a Next.js-based API gateway that translates between different AI provider protocols. It allows you to use a
+single API endpoint to interact with multiple AI providers, handling protocol conversion, authentication, and token
+management automatically.
 
 ## Tech Stack
 
@@ -152,19 +155,23 @@ GET /api/admin/analytics
 ## Protocol Support
 
 ### OpenAI
+
 - Chat Completions API
 - Models API
 - Streaming support
 
 ### Anthropic
+
 - Messages API
 - Streaming support
 
 ### Google
+
 - Chat API
 - Streaming support
 
 ### Gemini CLI
+
 - OAuth-based authentication
 - Token caching in KV
 - Automatic token refresh
@@ -224,6 +231,7 @@ npm run preview
 ## Documentation
 
 - [AGENTS.md](./AGENTS.md) - Project knowledge base for AI agents
+- [DESIGN.md](./DESIGN.md) - Design system tokens and UI patterns (colors, typography, spacing, components)
 
 ## Contributing
 
