@@ -12,7 +12,13 @@ export function createWorkerProtocol(): ProtocolAdapter {
     getAttempt: () => 3,
     getApiKey: async (env: Env, provider: Provider, ctx: ExecutionContext): Promise<string> =>
       KeyManager.getRandomApiKey(env, provider, ctx),
-    getEndpoint: async (provider: Provider, _model: string, _isStream: boolean, apiKey: string): Promise<string> => {
+    getEndpoint: async (
+      provider: Provider,
+      _model: string,
+      _isStream: boolean,
+      apiKey: string,
+      _isEmbedding?: boolean
+    ): Promise<string> => {
       const { accountId } = JSON.parse(apiKey) as CloudflareKey;
       const baseUrl = provider.endpoint ?? 'https://api.cloudflare.com';
       return `${baseUrl}/client/v4/accounts/${accountId}/ai/v1/chat/completions`;

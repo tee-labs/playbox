@@ -7,7 +7,7 @@ export function createGeminiCliProtocol(): ProtocolAdapter {
     getAttempt: () => 1,
     getApiKey: async (env: Env, provider: Provider, ctx: ExecutionContext): Promise<string> =>
       KeyManager.getValidAccessToken(env, provider.key, ctx),
-    getEndpoint: async (provider: Provider, model: string, isStream: boolean, _apiKey: string): Promise<string> => {
+    getEndpoint: async (provider: Provider, model: string, isStream: boolean, _apiKey: string, _isEmbedding?: boolean): Promise<string> => {
       const action = isStream ? 'streamGenerateContent?alt=sse' : 'generateContent';
       return `${provider.endpoint}:${action}`;
     },

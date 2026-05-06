@@ -7,7 +7,7 @@ export function createGoogleProtocol(): ProtocolAdapter {
     getAttempt: () => 3,
     getApiKey: async (env: Env, provider: Provider, ctx: ExecutionContext): Promise<string> =>
       KeyManager.getRandomApiKey(env, provider, ctx),
-    getEndpoint: async (provider: Provider, model: string, isStream: boolean, apiKey: string): Promise<string> => {
+    getEndpoint: async (provider: Provider, model: string, isStream: boolean, apiKey: string, _isEmbedding?: boolean): Promise<string> => {
       const action = isStream ? 'streamGenerateContent' : 'generateContent';
       const sseParam = isStream ? '&alt=sse' : '';
       return `${provider.endpoint}/v1beta/models/${model}:${action}?key=${apiKey}${sseParam}`;
