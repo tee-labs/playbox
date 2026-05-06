@@ -8,7 +8,7 @@
  * - 'anthropic': Anthropic native format - routes to /v1/messages
  * - 'gemini': Gemini native format (Google AI, Gemini CLI) - routes to /v1beta/models
  */
-export type ProtocolFamily = 'openai' | 'anthropic' | 'gemini' | 'embedding';
+export type ProtocolFamily = 'openai' | 'anthropic' | 'gemini' | 'embedding' | 'rerank';
 
 /**
  * Specific protocol types within each family

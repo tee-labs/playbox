@@ -123,7 +123,15 @@
       "endpoint": "https://ai.gitee.com",
       "key": "GiteeAI",
       "models": ["bge-m3", "Qwen3-Embedding-8B"]
-    }
+    },
+    // Gitee AI — rerank models
+    "gitee-ai-rerank": {
+      "type": "openai",
+      "family": "rerank",
+      "endpoint": "https://ai.gitee.com",
+      "key": "GiteeAI",
+      "models": ["bge-reranker-v2-m3", "Qwen3-Reranker-8B"]
+    },
     // Cloudflare AI Workers
     // "cloudflare": {
     //   "type": "worker",

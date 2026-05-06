@@ -14,6 +14,7 @@ v1/
 ├── chat/completions/  # OpenAI-compatible chat completions (POST)
 ├── embeddings/        # OpenAI-compatible embeddings API (POST)
 ├── messages/          # Anthropic-compatible messages API (POST)
+├── rerank/            # Rerank API (POST)
 └── models/            # Model listing endpoint (GET)
 ```
 
@@ -24,6 +25,7 @@ v1/
 | Add chat endpoint       | `chat/completions/route.ts` | OpenAI format                        |
 | Add embeddings endpoint | `embeddings/route.ts`       | OpenAI format, pass-through          |
 | Add messages endpoint   | `messages/route.ts`         | Anthropic format                     |
+| Add rerank endpoint     | `rerank/route.ts`           | Rerank format, pass-through          |
 | List models             | `models/route.ts`           | Returns available models from config |
 
 ## CONVENTIONS
@@ -42,7 +44,7 @@ v1/
 
 ## NOTES
 
-- **Endpoints**: POST `/v1/chat/completions`, POST `/v1/embeddings`, POST `/v1/messages`, GET `/v1/models`
+- **Endpoints**: POST `/v1/chat/completions`, POST `/v1/embeddings`, POST `/v1/rerank`, POST `/v1/messages`, GET `/v1/models`
 - **Model separation**: `/v1/models` excludes Gemini models (use `/v1beta/models` for Gemini)
 - **Protocol conversion**: OpenAI ↔ Anthropic ↔ Google ↔ Gemini CLI
 - **Streaming**: All endpoints support SSE streaming responses
