@@ -33,14 +33,16 @@ export async function GET(request: NextRequest) {
     const modelsList: ModelInfo[] = [];
     const seenIds = new Set<string>();
 
+    const allowedFamilies = ['openai', 'anthropic', 'embedding', 'rerank'];
+
     for (const [providerName, providerData] of Object.entries(providers)) {
       const provider = providerData as unknown as ProviderConfig;
 
-      if (provider.family === 'gemini') {
+      if (!allowedFamilies.includes(provider.family)) {
         continue;
       }
 
-      if (provider.family !== targetFamily) {
+      if (familyParam && provider.family !== targetFamily) {
         continue;
       }
 
