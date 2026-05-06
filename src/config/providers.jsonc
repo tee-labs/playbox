@@ -9,14 +9,7 @@
       "family": "openai",
       "endpoint": "https://ollama.com",
       "key": "Ollama",
-      "models": [
-        "gemma4:31b",
-        "glm-4.7",
-        "minimax-m2.5",
-        "qwen3-vl:235b",
-        "qwen3-coder:480b",
-        "qwen3-vl:235b-instruct"
-      ]
+      "models": ["gemma4:31b", "glm-4.7", "minimax-m2.5", "qwen3-vl:235b", "qwen3-coder:480b", "qwen3-vl:235b-instruct"]
     },
     // LongCat — primary OpenAI-compatible provider
     "longcat": {
@@ -121,9 +114,15 @@
       "family": "openai",
       "endpoint": "https://ark.cn-beijing.volces.com/api/coding/v3",
       "key": "Doubao",
-      "models": [
-        "ark-code-latest"
-      ]
+      "models": ["ark-code-latest"]
+    },
+    // Gitee AI — embedding models
+    "gitee-ai": {
+      "type": "openai",
+      "family": "embedding",
+      "endpoint": "https://ai.gitee.com",
+      "key": "GiteeAI",
+      "models": ["bge-m3", "Qwen3-Embedding-8B"]
     }
     // Cloudflare AI Workers
     // "cloudflare": {

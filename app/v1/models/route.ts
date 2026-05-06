@@ -26,7 +26,9 @@ export async function GET(request: NextRequest) {
     const providers = config.providers;
 
     const anthropicVersion = request.headers.get('anthropic-version');
-    const targetFamily = anthropicVersion ? 'anthropic' : 'openai';
+    const url = new URL(request.url);
+    const familyParam = url.searchParams.get('family');
+    const targetFamily = familyParam ?? (anthropicVersion ? 'anthropic' : 'openai');
 
     const modelsList: ModelInfo[] = [];
     const seenIds = new Set<string>();
