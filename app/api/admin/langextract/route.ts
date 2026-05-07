@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server';
 import { getTypedContext } from '@/lib/cloudflare-context';
 import { createJsonResponse, createInternalErrorResponse } from '@/lib/response-helpers';
 import { extract, ExampleData } from 'langextract';
-import { STATIC_CONFIG } from '@/config/default';
+import { getDefaultConfig } from '@/config/default';
 import type { ProviderConfig } from '@/types/provider';
 import type { D1Database } from '@cloudflare/workers-types';
 
@@ -62,6 +62,7 @@ export async function POST(request: NextRequest) {
     const { env } = getTypedContext();
     const db = env.PLAYBOX_D1;
 
+    const config = await getDefaultConfig(env);
     const body = (await request.json()) as ExtractBody;
     const {
       text,
@@ -105,7 +106,7 @@ export async function POST(request: NextRequest) {
     if (modelId) extractOptions.modelId = modelId;
 
     if (providerKey) {
-      const providerEntry = Object.entries(STATIC_CONFIG.providers).find(([, p]) => (p as ProviderConfig).key === providerKey);
+      const providerEntry = Object.entries(config.providers).find(([, p]) => (p as ProviderConfig).key === providerKey);
       const providerEndpoint = (providerEntry?.[1] as ProviderConfig | undefined)?.endpoint;
 
       if (modelType === 'openai' && providerEndpoint) {
@@ -159,7 +160,10 @@ export async function POST(request: NextRequest) {
 
 export async function GET() {
   try {
-    const openaiProviders = Object.entries(STATIC_CONFIG.providers)
+    const { env } = getTypedContext();
+    const config = await getDefaultConfig(env);
+
+    const openaiProviders = Object.entries(config.providers)
       .filter(([, p]) => (p as ProviderConfig).type === 'openai')
       .map(([name, p]) => {
         const pc = p as ProviderConfig;

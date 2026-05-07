@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "node scripts/generate-config-json.mjs && npx wrangler types && next build",
+    "build": "npx wrangler types && next build",
     "start": "next start",
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
@@ -30,7 +30,6 @@
     "eslint-plugin-jsx-a11y": "^6.10.2",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^5.2.0",
-    "jsonc-parser": "^3.3.1",
     "typescript": "^5.5.2",
     "typescript-eslint": "^8.59.0",
     "vitest": "^3.2.4",

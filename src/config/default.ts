@@ -1,16 +1,10 @@
 import { Provider, ProviderConfig } from '../types/provider';
-import providersJson from './providers.json';
 import type { Env } from '../types';
 
 export interface Config {
   providers: Provider;
   default_provider: string;
 }
-
-export const STATIC_CONFIG: Config = {
-  providers: providersJson.providers as Provider,
-  default_provider: providersJson.default_provider,
-};
 
 async function loadProvidersFromD1(env: Env): Promise<Config | null> {
   const db = env.PLAYBOX_D1;
@@ -26,6 +20,8 @@ async function loadProvidersFromD1(env: Env): Promise<Config | null> {
     }
 
     const providers: Provider = {};
+    let defaultProvider = '';
+
     for (const row of results as unknown as Record<string, unknown>[]) {
       const name = row.name as string;
       try {
@@ -38,6 +34,10 @@ async function loadProvidersFromD1(env: Env): Promise<Config | null> {
           models,
           ...(row.auth_type ? { authType: row.auth_type as ProviderConfig['authType'] } : {}),
         };
+
+        if (!defaultProvider) {
+          defaultProvider = name;
+        }
       } catch {
         continue;
       }
@@ -45,7 +45,7 @@ async function loadProvidersFromD1(env: Env): Promise<Config | null> {
 
     return {
       providers,
-      default_provider: STATIC_CONFIG.default_provider,
+      default_provider: defaultProvider,
     };
   } catch {
     return null;
@@ -53,8 +53,9 @@ async function loadProvidersFromD1(env: Env): Promise<Config | null> {
 }
 
 export async function getDefaultConfig(env: Env): Promise<Config> {
-  const fromD1 = await loadProvidersFromD1(env);
-  if (fromD1) return fromD1;
-
-  return STATIC_CONFIG;
+  const config = await loadProvidersFromD1(env);
+  if (!config) {
+    throw new Error('No provider configuration found. Please configure providers in D1 database.');
+  }
+  return config;
 }

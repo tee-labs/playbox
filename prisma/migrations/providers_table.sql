@@ -1,5 +1,5 @@
 -- Providers Table
--- Stores AI provider configurations, migrated from src/config/providers.json
+-- Stores AI provider configurations
 -- Provides runtime configuration with D1 as the primary source
 
 CREATE TABLE IF NOT EXISTS providers (
@@ -22,7 +22,7 @@ CREATE INDEX IF NOT EXISTS idx_providers_family ON providers(family);
 CREATE INDEX IF NOT EXISTS idx_providers_enabled ON providers(enabled);
 CREATE INDEX IF NOT EXISTS idx_providers_sort_order ON providers(sort_order);
 
--- Seed data from providers.json
+-- Seed data for providers
 INSERT OR IGNORE INTO providers (name, type, family, endpoint, key, models, auth_type, sort_order, enabled, created_at, updated_at)
 VALUES
   ('ollama', 'openai', 'openai', 'https://ollama.com', 'Ollama', '["gemma4:31b","glm-4.7","minimax-m2.5","qwen3-vl:235b","qwen3-coder:480b","qwen3-vl:235b-instruct"]', 'bearer', 0, 1, datetime('now'), datetime('now')),

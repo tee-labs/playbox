@@ -5,33 +5,31 @@
 ## OVERVIEW
 
 Provider configuration and runtime config resolution. Manages AI provider endpoints, model lists, and provider-type
-mapping.
+mapping. Configuration is loaded from D1 database at runtime.
 
 ## STRUCTURE
 
 ```
 config/
 ├── index.ts          # ConfigManager + resolveProvider()
-├── default.ts        # DEFAULT_CONFIG — loads from providers.json
-├── providers.jsonc   # Human-editable config with comments (source of truth)
-└── providers.json    # Generated from jsonc — do not edit directly
+└── default.ts        # Loads config from D1 database
 ```
 
 ## WHERE TO LOOK
 
-| Task                    | Location          | Notes                                    |
-| ----------------------- | ----------------- | ---------------------------------------- |
-| Add new provider        | `providers.jsonc` | Edit jsonc, run build to regenerate json |
-| Change default provider | `providers.jsonc` | Edit `default_provider` field            |
-| Modify resolution logic | `index.ts`        | `resolveProvider()` function             |
-| Config interface        | `default.ts`      | `Config` type definition                 |
+| Task                    | Location             | Notes                                    |
+| ----------------------- | -------------------- | ---------------------------------------- |
+| Add new provider        | D1 `providers` table | Insert into database via admin UI or SQL |
+| Change default provider | D1 `providers` table | First enabled provider becomes default   |
+| Modify resolution logic | `index.ts`           | `resolveProvider()` function             |
+| Config interface        | `default.ts`         | `Config` type definition                 |
 
 ## CONVENTIONS
 
 - **Provider types**: `openai`, `anthropic`, `google`, `gemini-cli`
 - **Model matching**: First match wins, prefers `preferredType` if specified
 - **Fallback**: Uses `default_provider` if model not found
-- **Priority**: D1 `providers` table > `providers.json` fallback
+- **Priority**: D1 `providers` table (sole config source)
 
 ## ANTI-PATTERNS
 
@@ -40,6 +38,6 @@ config/
 
 ## NOTES
 
-- **Providers**: longcat, cerebras, gemini, modelscope, nvidia
+- **Providers**: Configured via D1 database `providers` table
 - **Key resolution**: Provider key names map to env vars (e.g., `LongCat` → `LONGCAT_API_KEY`)
-- **Config source**: `providers.jsonc` is source of truth; `providers.json` is auto-generated
+- **Config source**: D1 database `providers` table (no local fallback files)
