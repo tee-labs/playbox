@@ -1,9 +1,9 @@
 import type { R2Storage } from '../interface';
 
-type StoredObject = {
+interface StoredObject {
   body: any;
   options?: Record<string, any>;
-};
+}
 
 export class VercelR2Adapter implements R2Storage {
   private objects = new Map<string, StoredObject>();
