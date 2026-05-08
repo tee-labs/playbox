@@ -27,7 +27,15 @@ async function mockAdminAPIs(page: any) {
       body: JSON.stringify({
         success: true,
         keys: [
-          { id: '1', name: 'Test Key', api_key: 'sk-test-key-12345', expires_at: null, created_at: '2025-01-01T00:00:00Z', is_active: true, last_used_at: null },
+          {
+            id: '1',
+            name: 'Test Key',
+            api_key: 'sk-test-key-12345',
+            expires_at: null,
+            created_at: '2025-01-01T00:00:00Z',
+            is_active: true,
+            last_used_at: null,
+          },
         ],
       }),
     });
@@ -41,7 +49,14 @@ async function mockAdminAPIs(page: any) {
       body: JSON.stringify({
         success: true,
         data: [
-          { domain: 'example.com', status: 'ok', slot_type: 'standard', lifecycle_type: 'active', expires_at: '20261231', nameservers: ['ns1.example.com'] },
+          {
+            domain: 'example.com',
+            status: 'ok',
+            slot_type: 'standard',
+            lifecycle_type: 'active',
+            expires_at: '20261231',
+            nameservers: ['ns1.example.com'],
+          },
         ],
       }),
     });
@@ -152,8 +167,10 @@ test.describe('Admin 页面直接导航渲染', () => {
 
   test('Providers 页面', async ({ page }) => {
     await page.goto('/admin/providers', { waitUntil: 'domcontentloaded' });
-    await page.waitForTimeout(2000);
-    await expect(page.locator('h4').filter({ hasText: 'Provider Models' })).toBeVisible();
+    await expect(page.locator('.ant-tabs')).toBeVisible();
+    await expect(page.locator('.ant-tabs-tab').filter({ hasText: '模型' })).toBeVisible();
+    await page.locator('.ant-tabs-tab').filter({ hasText: '模型' }).click();
+    await page.waitForTimeout(3000);
     await expect(page.locator('.ant-layout-content')).toBeVisible();
   });
 
@@ -239,7 +256,10 @@ test.describe('Admin 页面交互', () => {
     const urlInput = page.locator('input').first();
     await urlInput.fill('https://example.com');
 
-    const createBtn = page.locator('button').filter({ hasText: /Create|Shorten/ }).first();
+    const createBtn = page
+      .locator('button')
+      .filter({ hasText: /Create|Shorten/ })
+      .first();
     if (await createBtn.isVisible()) {
       await createBtn.click();
       await page.waitForTimeout(1000);
@@ -272,11 +292,9 @@ test.describe('Admin 页面交互', () => {
     await page.waitForTimeout(1500);
 
     // Tables -> KV (click sidebar menu)
-    const kvMenuItem = page.locator('.ant-menu-item:has-text("KV Storage") a');
+    const kvMenuItem = page.locator('.ant-menu-item').filter({ hasText: 'KV Storage' });
     if (await kvMenuItem.isVisible()) {
-      await kvMenuItem.click();
-      await page.waitForTimeout(1500);
-      expect(page.url()).toContain('/admin/kv');
+      await Promise.all([page.waitForURL('**/admin/kv', { timeout: 10000 }), kvMenuItem.click()]);
     }
 
     // Navigate back to Tables
