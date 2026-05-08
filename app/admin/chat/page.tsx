@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { message as antdMessage, Spin, Alert } from 'antd';
+import { message as antdMessage, Spin, Alert, Button, Drawer } from 'antd';
+import { MenuUnfoldOutlined } from '@ant-design/icons';
 
 import ChatMessage from '../../components/Chat/ChatMessage';
 import ChatInput from '../../components/Chat/ChatInput';
@@ -33,7 +34,16 @@ export default function ChatTestPage() {
   const [messages, setMessages] = useState<ChatMessageType[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   useEffect(() => {
     const initApiKey = getApiKey();
@@ -178,15 +188,43 @@ export default function ChatTestPage() {
 
   return (
     <div style={{ display: 'flex', height: 'calc(100vh - 140px)', overflow: 'hidden' }}>
-      <ChatHistorySidebar
-        sessions={sessions}
-        currentSessionId={currentSessionId}
-        onSelect={loadSession}
-        onCreate={handleCreateSession}
-        onDelete={handleDeleteSession}
-      />
+      {!isMobile && (
+        <ChatHistorySidebar
+          sessions={sessions}
+          currentSessionId={currentSessionId}
+          onSelect={loadSession}
+          onCreate={handleCreateSession}
+          onDelete={handleDeleteSession}
+        />
+      )}
+
+      {isMobile && (
+        <Drawer title="Chat History" placement="left" closable onClose={() => setDrawerOpen(false)} open={drawerOpen} width={280}>
+          <ChatHistorySidebar
+            sessions={sessions}
+            currentSessionId={currentSessionId}
+            onSelect={(id) => {
+              loadSession(id);
+              setDrawerOpen(false);
+            }}
+            onCreate={() => {
+              handleCreateSession();
+              setDrawerOpen(false);
+            }}
+            onDelete={handleDeleteSession}
+          />
+        </Drawer>
+      )}
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        {isMobile && (
+          <Button
+            type="text"
+            icon={<MenuUnfoldOutlined />}
+            onClick={() => setDrawerOpen(true)}
+            style={{ alignSelf: 'flex-start', margin: 8 }}
+          />
+        )}
         <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
           {error && (
             <Alert
@@ -195,7 +233,7 @@ export default function ChatTestPage() {
               type="error"
               showIcon
               closable
-              style={{ margin: 16 }}
+              style={{ margin: isMobile ? 12 : 16 }}
               onClose={() => setError(null)}
             />
           )}
@@ -203,7 +241,7 @@ export default function ChatTestPage() {
             style={{
               flex: 1,
               overflow: 'auto',
-              padding: 16,
+              padding: isMobile ? 12 : 16,
               display: 'flex',
               flexDirection: 'column',
               gap: 16,

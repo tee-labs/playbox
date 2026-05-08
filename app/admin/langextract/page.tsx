@@ -409,7 +409,7 @@ export default function LangExtractPage() {
 
               <Text strong>Expected Extractions</Text>
               {example.extractions.map((ext, extIdx) => (
-                <Space key={extIdx} style={{ display: 'flex', marginBottom: 8 }} align="start">
+                <Space key={extIdx} style={{ display: 'flex', marginBottom: 8 }} align="start" wrap>
                   <Input
                     placeholder="Class (e.g., person)"
                     value={ext.extractionClass}
@@ -418,7 +418,7 @@ export default function LangExtractPage() {
                       updated[exIdx].extractions[extIdx].extractionClass = e.target.value;
                       setExamples(updated);
                     }}
-                    style={{ width: 150 }}
+                    style={{ width: '100%', minWidth: 120 }}
                   />
                   <Input
                     placeholder="Text (e.g., John Smith)"
@@ -428,7 +428,7 @@ export default function LangExtractPage() {
                       updated[exIdx].extractions[extIdx].extractionText = e.target.value;
                       setExamples(updated);
                     }}
-                    style={{ width: 200 }}
+                    style={{ width: '100%', minWidth: 150 }}
                   />
                   <Input
                     placeholder='Attributes JSON (e.g., {"age":"30"})'
@@ -438,7 +438,7 @@ export default function LangExtractPage() {
                       updated[exIdx].extractions[extIdx].attributes = e.target.value;
                       setExamples(updated);
                     }}
-                    style={{ width: 200 }}
+                    style={{ width: '100%', minWidth: 150 }}
                   />
                   {example.extractions.length > 1 && (
                     <Button size="small" icon={<DeleteOutlined />} onClick={() => removeExtractionFromExample(exIdx, extIdx)} />

@@ -61,7 +61,7 @@ export default function ApiTestPage() {
 
   return (
     <Row gutter={16} style={{ height: 'calc(100vh - 200px)' }}>
-      <Col span={6}>
+      <Col xs={24} sm={24} md={6}>
         <Card
           title="History"
           size="small"
@@ -71,7 +71,7 @@ export default function ApiTestPage() {
           <HistoryPanel onSelect={handleLoadFromHistory} />
         </Card>
       </Col>
-      <Col span={18}>
+      <Col xs={24} sm={24} md={18}>
         <Space direction="vertical" style={{ width: '100%' }} size="middle">
           <Card title="Request" size="small">
             <ApiTestForm request={request} onChange={setRequest} onExecute={handleExecute} loading={loading} />

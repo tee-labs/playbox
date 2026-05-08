@@ -448,16 +448,16 @@ export default function AnalyticsPage() {
           </Col>
         </Row>
         <Row gutter={16} style={{ marginTop: 16 }}>
-          <Col span={6}>
+          <Col xs={12} sm={12} md={6}>
             <Statistic title="Total Requests" value={totalRequests.toLocaleString()} />
           </Col>
-          <Col span={6}>
+          <Col xs={12} sm={12} md={6}>
             <Statistic title="Total Tokens" value={formatNumber(totalTokens)} suffix="tokens" />
           </Col>
-          <Col span={6}>
+          <Col xs={12} sm={12} md={6}>
             <Statistic title="Prompt Tokens" value={formatNumber(totalPromptTokens)} />
           </Col>
-          <Col span={6}>
+          <Col xs={12} sm={12} md={6}>
             <Statistic title="Completion Tokens" value={formatNumber(totalCompletionTokens)} />
           </Col>
         </Row>
@@ -470,7 +470,7 @@ export default function AnalyticsPage() {
       ) : (
         <>
           <Row gutter={16} style={{ marginBottom: 16 }}>
-            <Col span={12}>
+            <Col xs={24} sm={24} md={12}>
               <Card title="Requests by Model" bordered={false}>
                 <ResponsiveContainer width="100%" height={300}>
                   <PieChart>
@@ -492,7 +492,7 @@ export default function AnalyticsPage() {
                 </ResponsiveContainer>
               </Card>
             </Col>
-            <Col span={12}>
+            <Col xs={24} sm={24} md={12}>
               <Card title="Requests by Provider" bordered={false}>
                 <ResponsiveContainer width="100%" height={300}>
                   <BarChart data={providerBarData.slice(0, 10)}>
@@ -508,7 +508,7 @@ export default function AnalyticsPage() {
           </Row>
 
           <Row gutter={16} style={{ marginBottom: 16 }}>
-            <Col span={12}>
+            <Col xs={24} sm={24} md={12}>
               <Card title="Requests by API Key" bordered={false}>
                 <ResponsiveContainer width="100%" height={300}>
                   <BarChart data={apiKeyStats.slice(0, 10)}>
@@ -521,7 +521,7 @@ export default function AnalyticsPage() {
                 </ResponsiveContainer>
               </Card>
             </Col>
-            <Col span={12}>
+            <Col xs={24} sm={24} md={12}>
               <Card title="Token Usage by API Key" bordered={false}>
                 <ResponsiveContainer width="100%" height={300}>
                   <BarChart data={apiKeyTokenStats.slice(0, 10)}>
@@ -563,7 +563,7 @@ export default function AnalyticsPage() {
           )}
 
           <Row gutter={16} style={{ marginBottom: 16 }}>
-            <Col span={12}>
+            <Col xs={24} sm={24} md={12}>
               <Card title="Token Distribution by Model" bordered={false}>
                 <ResponsiveContainer width="100%" height={300}>
                   <PieChart>
@@ -585,7 +585,7 @@ export default function AnalyticsPage() {
                 </ResponsiveContainer>
               </Card>
             </Col>
-            <Col span={12}>
+            <Col xs={24} sm={24} md={12}>
               <Card title="Token Usage by Provider" bordered={false}>
                 <ResponsiveContainer width="100%" height={300}>
                   <BarChart data={tokenProviderBarData.slice(0, 10)}>

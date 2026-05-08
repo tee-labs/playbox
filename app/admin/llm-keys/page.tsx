@@ -273,15 +273,7 @@ export default function LLMKeysAdminPage() {
       </Card>
 
       <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', marginBottom: 16 }}>
-        <Table
-          columns={columns}
-          dataSource={keys}
-          rowKey="id"
-          loading={loading}
-          pagination={false}
-          scroll={{ x: 800, y: 'calc(100vh - 350px)' }}
-          size="small"
-        />
+        <Table columns={columns} dataSource={keys} rowKey="id" loading={loading} pagination={false} scroll={{ x: 800 }} size="small" />
       </div>
 
       <CreateKeyModal open={createModalOpen} onClose={() => setCreateModalOpen(false)} onSuccess={handleCreateSuccess} />

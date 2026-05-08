@@ -168,15 +168,17 @@ export default function DomainsPage() {
         </Space>
       </Card>
 
-      <Table
-        columns={columns}
-        dataSource={domains}
-        rowKey="name"
-        loading={loading && domains.length > 0}
-        pagination={false}
-        scroll={{ y: 'calc(100vh - 320px)' }}
-        size="small"
-      />
+      <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+        <Table
+          columns={columns}
+          dataSource={domains}
+          rowKey="name"
+          loading={loading && domains.length > 0}
+          pagination={false}
+          scroll={{ x: 800, y: 'calc(100vh - 320px)' }}
+          size="small"
+        />
+      </div>
     </div>
   );
 }

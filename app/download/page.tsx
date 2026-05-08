@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Form, Input, Button, Alert, Spin, Card, Typography } from 'antd';
 import { DownloadOutlined } from '@ant-design/icons';
 
@@ -11,6 +11,14 @@ export default function DownloadPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const onFinish = async (values: { url: string }) => {
     const { url } = values;
@@ -63,7 +71,7 @@ export default function DownloadPage() {
         justifyContent: 'center',
         alignItems: 'center',
         minHeight: '100vh',
-        padding: '24px',
+        padding: isMobile ? '12px' : '24px',
         background: '#f0f2f5',
       }}
     >
@@ -71,7 +79,6 @@ export default function DownloadPage() {
         style={{
           width: '100%',
           maxWidth: 600,
-          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
         }}
       >
         <div style={{ textAlign: 'center', marginBottom: 24 }}>

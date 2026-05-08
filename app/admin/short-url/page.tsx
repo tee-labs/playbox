@@ -125,14 +125,16 @@ export default function ShortUrlPage() {
           <Space style={{ width: '100%' }} size="large" direction="vertical">
             <div>
               <Title level={5}>Short URL</Title>
-              <Space>
-                <Input value={result.shortUrl} readOnly style={{ width: 200 }} />
-                <Button icon={<CopyOutlined />} onClick={() => handleCopy(window.location.origin + result.shortUrl)}>
-                  Copy
-                </Button>
-                <Button icon={<LinkOutlined />} onClick={() => window.open(result.shortUrl, '_blank')}>
-                  Open
-                </Button>
+              <Space direction="vertical" style={{ width: '100%' }} size="small">
+                <Input value={result.shortUrl} readOnly style={{ width: '100%' }} />
+                <Space wrap>
+                  <Button icon={<CopyOutlined />} onClick={() => handleCopy(window.location.origin + result.shortUrl)}>
+                    Copy
+                  </Button>
+                  <Button icon={<LinkOutlined />} onClick={() => window.open(result.shortUrl, '_blank')}>
+                    Open
+                  </Button>
+                </Space>
               </Space>
             </div>
 

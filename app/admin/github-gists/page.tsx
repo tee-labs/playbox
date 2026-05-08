@@ -681,24 +681,26 @@ export default function GitHubGistsPage() {
         </Space>
       </Card>
 
-      <Table
-        columns={columns}
-        dataSource={gists}
-        rowKey="id"
-        loading={loading}
-        pagination={{
-          current: page,
-          pageSize: 30,
-          total: totalPages ? totalPages * 30 : gists.length,
-          onChange: (p) => {
-            setPage(p);
-            fetchGists(p);
-          },
-          showTotal: (total) => `~${total} gists`,
-        }}
-        scroll={{ y: 'calc(100vh - 320px)' }}
-        size="small"
-      />
+      <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+        <Table
+          columns={columns}
+          dataSource={gists}
+          rowKey="id"
+          loading={loading}
+          pagination={{
+            current: page,
+            pageSize: 30,
+            total: totalPages ? totalPages * 30 : gists.length,
+            onChange: (p) => {
+              setPage(p);
+              fetchGists(p);
+            },
+            showTotal: (total) => `~${total} gists`,
+          }}
+          scroll={{ x: 800, y: 'calc(100vh - 320px)' }}
+          size="small"
+        />
+      </div>
 
       <CreateGistModal
         open={createModalOpen}

@@ -281,22 +281,26 @@ export default function EmailTestPage() {
                     Refresh
                   </Button>
                 </Space>
-                <Table
-                  columns={columns}
-                  dataSource={history}
-                  rowKey="id"
-                  loading={historyLoading}
-                  pagination={{
-                    current: page,
-                    pageSize,
-                    total,
-                    onChange: (p, ps) => {
-                      setPage(p);
-                      setPageSize(ps);
-                      fetchHistory(p, ps);
-                    },
-                  }}
-                />
+                <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+                  <Table
+                    columns={columns}
+                    dataSource={history}
+                    rowKey="id"
+                    loading={historyLoading}
+                    pagination={{
+                      current: page,
+                      pageSize,
+                      total,
+                      onChange: (p, ps) => {
+                        setPage(p);
+                        setPageSize(ps);
+                        fetchHistory(p, ps);
+                      },
+                    }}
+                    scroll={{ x: 800 }}
+                    size="small"
+                  />
+                </div>
               </Card>
             ),
           },
