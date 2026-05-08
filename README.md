@@ -1,7 +1,7 @@
 # Playbox - AI API Gateway & Protocol Converter
 
 AI API Gateway & Protocol Converter — converts between AI provider protocols (OpenAI, Anthropic, Google, Gemini CLI) on
-Next.js with Cloudflare Workers deployment.
+Next.js with **Cloudflare Workers** or **Vercel** deployment.
 
 ## Overview
 
@@ -9,12 +9,18 @@ Playbox is a Next.js-based API gateway that translates between different AI prov
 single API endpoint to interact with multiple AI providers, handling protocol conversion, authentication, and token
 management automatically.
 
+The project uses a **storage adapter pattern** to support multiple deployment platforms:
+- **Cloudflare Workers**: Uses D1 (SQLite), KV, and R2 storage
+- **Vercel**: Uses in-memory storage adapters (ideal for serverless deployments)
+
 ## Tech Stack
 
 - **Framework**: Next.js 15 (App Router)
 - **Language**: TypeScript
 - **Testing**: Vitest + Cloudflare Workers pool
-- **Deployment**: Cloudflare Workers (via OpenNext for Cloudflare)
+- **Deployment**: 
+  - Cloudflare Workers (via OpenNext for Cloudflare)
+  - Vercel (via `vercel` CLI)
 - **UI**: Ant Design + Recharts
 
 ## Project Structure
@@ -51,12 +57,17 @@ management automatically.
 │   ├── config/             # ConfigManager, provider configs
 │   ├── utils/              # Logger, CORS constants, SSRF protection
 │   ├── lib/                # Auth middleware, response helpers
-│   └── types/              # Protocol, request, response types
+│   ├── types/              # Protocol, request, response types
+│   └── storage/            # Storage adapter pattern
+│       ├── interface.ts    # Storage interfaces (KVStorage, D1Storage, R2Storage)
+│       ├── factory.ts      # Storage adapter factory (createStorageAdapters)
+│       ├── cloudflare/     # Cloudflare Workers adapters (D1, KV, R2)
+│       └── vercel/         # Vercel adapters (in-memory storage)
 ├── test/                   # Vitest + Cloudflare Workers pool
-│   ├── unit/               # Protocol + manager tests
+│   ├── unit/               # Protocol + manager + lib + config + storage tests
 │   └── factories/          # Mock data generators
 ├── prisma/migrations/      # D1 schema migrations
-├── wrangler.jsonc          # Cloudflare Workers config (D1, KV, secrets)
+├── wrangler.jsonc          # Cloudflare Workers config (D1, KV, R2, secrets)
 └── vitest.config.mts       # Test config with CF pool
 ```
 
@@ -71,6 +82,7 @@ management automatically.
 - **Admin Dashboard**: React + Ant Design UI for management
 - **Analytics**: Cloudflare Analytics Engine integration with Recharts visualizations
 - **Download Proxy**: Secure file downloads with SSRF protection
+- **Multi-platform Deployment**: Deploy to Cloudflare Workers or Vercel with storage adapter pattern
 
 ## Getting Started
 
@@ -78,7 +90,8 @@ management automatically.
 
 - Node.js 18+
 - npm or yarn
-- Cloudflare account (for deployment)
+- **For Cloudflare deployment**: Cloudflare account
+- **For Vercel deployment**: Vercel account
 
 ### Installation
 
@@ -86,25 +99,35 @@ management automatically.
 # Install dependencies
 npm install
 
-# Start development server
+# Start development server (local)
 npm run dev
 
 # Run tests
 npm test
-
-# Deploy to Cloudflare
-npm run deploy
 ```
 
 ### Configuration
 
-Configuration is managed through environment variables and `wrangler.jsonc`:
+#### Cloudflare Workers
+
+Configuration is managed through `wrangler.jsonc`:
 
 ```bash
 # Set secrets via wrangler
 wrangler secret put AUTH_TOKEN
 
 # Local development uses .dev.vars file
+```
+
+#### Vercel
+
+Set environment variables in Vercel project settings or via CLI:
+
+```bash
+# Set environment variables
+vercel env add AUTH_TOKEN
+
+# Or use .env.local for local development
 ```
 
 ## API Endpoints
@@ -176,6 +199,18 @@ GET /api/admin/analytics
 - Token caching in KV
 - Automatic token refresh
 
+## Storage Adapter Pattern
+
+Playbox uses a storage adapter pattern to support multiple deployment platforms:
+
+| Storage Type | Cloudflare Workers | Vercel |
+|--------------|-------------------|--------|
+| KV (Key-Value) | Cloudflare KV | In-memory Map |
+| D1 (Database) | Cloudflare D1 (SQLite) | In-memory Map with SQL-like API |
+| R2 (Object Storage) | Cloudflare R2 | In-memory Map |
+
+The factory function `createStorageAdapters(env)` automatically creates the appropriate adapters based on the environment.
+
 ## Development
 
 ### Adding a New Protocol
@@ -222,11 +257,52 @@ npm run deploy
 npm run preview
 ```
 
+**Requirements:**
+- Cloudflare account with Workers, KV, D1, and R2 enabled
+- `wrangler.jsonc` configured with bindings
+- D1 database created and migrations applied
+
+**Storage Setup:**
+```bash
+# Create D1 database
+wrangler d1 create playbox-db
+
+# Apply migrations
+wrangler d1 migrations apply playbox-db
+
+# Create KV namespace
+wrangler kv namespace create playbox-kv
+
+# Create R2 bucket
+wrangler r2 bucket create playbox-r2
+```
+
+### Vercel
+
+```bash
+# Install Vercel CLI (if not already installed)
+npm i -g vercel
+
+# Deploy to Vercel
+vercel --prod
+
+# Preview deployment
+vercel
+```
+
+**Requirements:**
+- Vercel account
+- Environment variables set in Vercel project settings
+
+**Note:** Vercel deployment uses in-memory storage adapters. Data is not persisted across function invocations. For production use with persistence, consider:
+- Using external storage services (Redis, PostgreSQL, S3, etc.)
+- Extending the storage adapters in `src/storage/vercel/`
+
 ## Security
 
 - **SSRF Protection**: All external URLs validated via `validateSafeUrl()`
-- **API Key**: Required for all endpoints (set via `AUTH_TOKEN` secret)
-- **Secrets**: Use `wrangler secret put` for sensitive values
+- **API Key**: Required for all endpoints (set via `AUTH_TOKEN` secret/env var)
+- **Secrets**: Use `wrangler secret put` (Cloudflare) or Vercel environment variables
 
 ## Documentation
 
