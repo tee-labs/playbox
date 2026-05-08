@@ -1,31 +1,45 @@
 import type { R2Storage } from '../interface';
+import { put, head, del, list } from '@vercel/blob';
 
-interface StoredObject {
-  body: any;
-  options?: Record<string, any>;
-}
-
+/**
+ * Vercel R2 adapter using Vercel Blob.
+ *
+ * Environment variables required (auto-configured when using Vercel Blob):
+ * - BLOB_READ_WRITE_TOKEN
+ *
+ * Setup: vercel blob create playbox-r2
+ *
+ * Note: Vercel Blob uses a flat key-value store (S3-compatible).
+ * The `list` method with prefix filtering emulates R2's prefix-based listing.
+ */
 export class VercelR2Adapter implements R2Storage {
-  private objects = new Map<string, StoredObject>();
-
   async put(key: string, body: any, options?: Record<string, any>): Promise<void> {
-    this.objects.set(key, { body, options });
+    await put(key, body, {
+      access: 'public',
+      ...options,
+    });
   }
 
   async get(key: string): Promise<any> {
-    const obj = this.objects.get(key);
-    return obj?.body;
+    try {
+      const blobInfo = await head(key);
+      if (!blobInfo) return null;
+      // Fetch the actual content
+      const response = await fetch(blobInfo.url);
+      return response.body;
+    } catch {
+      return null;
+    }
   }
 
   async delete(key: string): Promise<void> {
-    this.objects.delete(key);
+    await del(key);
   }
 
   async list(prefix?: string): Promise<string[]> {
-    const keys = Array.from(this.objects.keys());
-    if (prefix) {
-      return keys.filter((key) => key.startsWith(prefix));
-    }
-    return keys;
+    const result = await list({
+      prefix: prefix || undefined,
+    });
+    return result.blobs.map((blob) => blob.pathname);
   }
 }

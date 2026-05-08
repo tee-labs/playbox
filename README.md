@@ -11,7 +11,7 @@ management automatically.
 
 The project uses a **storage adapter pattern** to support multiple deployment platforms:
 - **Cloudflare Workers**: Uses D1 (SQLite), KV, and R2 storage
-- **Vercel**: Uses in-memory storage adapters (ideal for serverless deployments)
+- **Vercel**: Uses Vercel Postgres (Neon), Vercel KV (Upstash Redis), and Vercel Blob
 
 ## Tech Stack
 
@@ -203,13 +203,16 @@ GET /api/admin/analytics
 
 Playbox uses a storage adapter pattern to support multiple deployment platforms:
 
-| Storage Type | Cloudflare Workers | Vercel |
-|--------------|-------------------|--------|
-| KV (Key-Value) | Cloudflare KV | In-memory Map |
-| D1 (Database) | Cloudflare D1 (SQLite) | In-memory Map with SQL-like API |
-| R2 (Object Storage) | Cloudflare R2 | In-memory Map |
+| Storage Type | Cloudflare Workers | Vercel | Vercel Service |
+|--------------|-------------------|--------|----------------|
+| KV (缓存) | Cloudflare KV | Vercel KV (Upstash Redis) | `@vercel/kv` |
+| D1 (数据库) | Cloudflare D1 (SQLite) | Vercel Postgres (Neon) | `@vercel/postgres` |
+| R2 (对象存储) | Cloudflare R2 | Vercel Blob (S3) | `@vercel/blob` |
+| Analytics | Cloudflare Analytics Engine | ⚠️ 暂不支持 | — |
 
-The factory function `createStorageAdapters(env)` automatically creates the appropriate adapters based on the environment.
+The factory function `createStorageAdapters(env)` automatically detects the platform and creates the appropriate adapters:
+- **Cloudflare**: Detected by presence of `PLAYBOX_KV`, `PLAYBOX_D1`, `PLAYBOX_R2` bindings
+- **Vercel**: Falls through to Vercel adapters, which connect via environment variables
 
 ## Development
 
@@ -280,11 +283,8 @@ wrangler r2 bucket create playbox-r2
 ### Vercel
 
 ```bash
-# Install Vercel CLI (if not already installed)
-npm i -g vercel
-
 # Deploy to Vercel
-vercel --prod
+npm run deploy:vercel
 
 # Preview deployment
 vercel
@@ -292,11 +292,34 @@ vercel
 
 **Requirements:**
 - Vercel account
-- Environment variables set in Vercel project settings
+- Vercel KV, Postgres, and Blob storage instances created and linked to project
+- Environment variables auto-configured when linking storage
 
-**Note:** Vercel deployment uses in-memory storage adapters. Data is not persisted across function invocations. For production use with persistence, consider:
-- Using external storage services (Redis, PostgreSQL, S3, etc.)
-- Extending the storage adapters in `src/storage/vercel/`
+**Storage Setup:**
+```bash
+# Create Vercel KV (replaces Cloudflare KV)
+vercel kv create playbox-kv
+
+# Create Vercel Postgres (replaces Cloudflare D1)
+vercel postgres create playbox-db
+
+# Create Vercel Blob (replaces Cloudflare R2)
+vercel blob create playbox-r2
+
+# Link storage to project (auto-injects env vars)
+vercel kv link playbox-kv
+vercel postgres link playbox-db
+vercel blob link playbox-r2
+```
+
+**Database Initialization:**
+```bash
+# Connect to Postgres and run migration scripts
+vercel postgres shell playbox-db
+# See DEPLOY_VERCEL.md for PostgreSQL-compatible migration SQL
+```
+
+> 📖 **Full Vercel deployment guide**: See [DEPLOY_VERCEL.md](./DEPLOY_VERCEL.md) for detailed step-by-step instructions, SQL migration scripts, and troubleshooting.
 
 ## Security
 
@@ -308,6 +331,7 @@ vercel
 
 - [AGENTS.md](./AGENTS.md) - Project knowledge base for AI agents
 - [DESIGN.md](./DESIGN.md) - Design system tokens and UI patterns (colors, typography, spacing, components)
+- [DEPLOY_VERCEL.md](./DEPLOY_VERCEL.md) - Vercel deployment guide (storage setup, database migration, troubleshooting)
 
 ## Contributing
 

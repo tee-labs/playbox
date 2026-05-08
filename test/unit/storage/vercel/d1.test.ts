@@ -1,85 +1,115 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+
+// Mock @vercel/postgres — factory must not reference external variables due to hoisting
+vi.mock('@vercel/postgres', () => ({
+  sql: {
+    query: vi.fn(),
+  },
+}));
+
+// Import after mock
 import { VercelD1Adapter } from '../../../../src/storage/vercel/d1';
+import { sql } from '@vercel/postgres';
+
+const mockSqlQuery = sql.query as unknown as ReturnType<typeof vi.fn>;
 
 describe('VercelD1Adapter', () => {
   let adapter: VercelD1Adapter;
 
   beforeEach(() => {
+    vi.clearAllMocks();
     adapter = new VercelD1Adapter();
   });
 
-  describe('query', () => {
-    it('should return empty results for non-existent table', async () => {
-      const result = await adapter.query('SELECT * FROM users');
-      expect(result).toEqual({ results: [] });
+  describe('SQL translation', () => {
+    it('translates ? placeholders to $1, $2, ...', async () => {
+      mockSqlQuery.mockResolvedValue({ rows: [] });
+      await adapter.query('SELECT * FROM users WHERE id = ? AND name = ?', [1, 'Alice']);
+      expect(mockSqlQuery).toHaveBeenCalledWith(
+        'SELECT * FROM users WHERE id = $1 AND name = $2',
+        [1, 'Alice']
+      );
     });
 
-    it('should return all rows from table without WHERE clause', async () => {
-      await adapter.execute('INSERT INTO users (id, name) VALUES (?, ?)', [1, 'Alice']);
-      await adapter.execute('INSERT INTO users (id, name) VALUES (?, ?)', [2, 'Bob']);
+    it('translates datetime("now") to NOW()', async () => {
+      mockSqlQuery.mockResolvedValue({ rows: [] });
+      await adapter.query('SELECT * FROM users WHERE created_at > datetime("now")');
+      expect(mockSqlQuery).toHaveBeenCalledWith(
+        'SELECT * FROM users WHERE created_at > NOW()',
+        []
+      );
+    });
 
+    it('handles query without params', async () => {
+      mockSqlQuery.mockResolvedValue({ rows: [{ id: 1, name: 'Alice' }] });
+      const result = await adapter.query('SELECT * FROM users');
+      expect(mockSqlQuery).toHaveBeenCalledWith('SELECT * FROM users', []);
+      expect(result.results).toEqual([{ id: 1, name: 'Alice' }]);
+    });
+  });
+
+  describe('query', () => {
+    it('returns rows from Vercel Postgres', async () => {
+      mockSqlQuery.mockResolvedValue({
+        rows: [
+          { id: 1, name: 'Alice' },
+          { id: 2, name: 'Bob' },
+        ],
+      });
       const result = await adapter.query('SELECT * FROM users');
       expect(result.results).toHaveLength(2);
       expect(result.results[0]).toEqual({ id: 1, name: 'Alice' });
-      expect(result.results[1]).toEqual({ id: 2, name: 'Bob' });
     });
 
-    it('should filter results with WHERE clause and params', async () => {
-      await adapter.execute('INSERT INTO users (id, name) VALUES (?, ?)', [1, 'Alice']);
-      await adapter.execute('INSERT INTO users (id, name) VALUES (?, ?)', [2, 'Bob']);
-
-      const result = await adapter.query('SELECT * FROM users WHERE id = ?', [1]);
-      expect(result.results).toHaveLength(1);
-      expect(result.results[0]).toEqual({ id: 1, name: 'Alice' });
-    });
-
-    it('should handle WHERE clause with multiple conditions', async () => {
-      await adapter.execute('INSERT INTO users (id, name, age) VALUES (?, ?, ?)', [1, 'Alice', 30]);
-      await adapter.execute('INSERT INTO users (id, name, age) VALUES (?, ?, ?)', [2, 'Bob', 25]);
-
-      const result = await adapter.query('SELECT * FROM users WHERE age > ? AND name = ?', [25, 'Alice']);
-      expect(result.results).toHaveLength(1);
-      expect(result.results[0]).toEqual({ id: 1, name: 'Alice', age: 30 });
+    it('returns empty results on error', async () => {
+      mockSqlQuery.mockRejectedValue(new Error('Connection failed'));
+      const result = await adapter.query('SELECT * FROM users');
+      expect(result).toEqual({ results: [] });
     });
   });
 
   describe('execute', () => {
-    it('should insert rows and return success', async () => {
+    it('executes INSERT with translated params', async () => {
+      mockSqlQuery.mockResolvedValue({ rowCount: 1 });
       const result = await adapter.execute('INSERT INTO users (id, name) VALUES (?, ?)', [1, 'Alice']);
       expect(result).toEqual({ success: true });
-
-      const queryResult = await adapter.query('SELECT * FROM users');
-      expect(queryResult.results).toHaveLength(1);
+      expect(mockSqlQuery).toHaveBeenCalledWith(
+        'INSERT INTO users (id, name) VALUES ($1, $2)',
+        [1, 'Alice']
+      );
     });
 
-    it('should update rows and return success', async () => {
-      await adapter.execute('INSERT INTO users (id, name) VALUES (?, ?)', [1, 'Alice']);
-
+    it('executes UPDATE with translated params', async () => {
+      mockSqlQuery.mockResolvedValue({ rowCount: 1 });
       const result = await adapter.execute('UPDATE users SET name = ? WHERE id = ?', ['Bob', 1]);
       expect(result).toEqual({ success: true });
-
-      const queryResult = await adapter.query('SELECT * FROM users WHERE id = ?', [1]);
-      expect(queryResult.results[0].name).toBe('Bob');
+      expect(mockSqlQuery).toHaveBeenCalledWith(
+        'UPDATE users SET name = $1 WHERE id = $2',
+        ['Bob', 1]
+      );
     });
 
-    it('should delete rows and return success', async () => {
-      await adapter.execute('INSERT INTO users (id, name) VALUES (?, ?)', [1, 'Alice']);
-      await adapter.execute('INSERT INTO users (id, name) VALUES (?, ?)', [2, 'Bob']);
-
+    it('executes DELETE with translated params', async () => {
+      mockSqlQuery.mockResolvedValue({ rowCount: 1 });
       const result = await adapter.execute('DELETE FROM users WHERE id = ?', [1]);
       expect(result).toEqual({ success: true });
-
-      const queryResult = await adapter.query('SELECT * FROM users');
-      expect(queryResult.results).toHaveLength(1);
-      expect(queryResult.results[0].id).toBe(2);
+      expect(mockSqlQuery).toHaveBeenCalledWith(
+        'DELETE FROM users WHERE id = $1',
+        [1]
+      );
     });
 
-    it('should handle INSERT with multiple columns', async () => {
-      const result = await adapter.execute('INSERT INTO posts (id, title, content) VALUES (?, ?, ?)', [1, 'Test', 'Content']);
-      expect(result).toEqual({ success: true });
+    it('returns failure on error', async () => {
+      mockSqlQuery.mockRejectedValue(new Error('Connection failed'));
+      const result = await adapter.execute('INSERT INTO users (id) VALUES (?)', [1]);
+      expect(result).toEqual({ success: false });
+    });
+  });
 
-      const queryResult = await adapter.query('SELECT * FROM posts');
-      expect(queryResult.results[0]).toEqual({ id: 1, title: 'Test', content: 'Content' });
+  describe('interface compliance', () => {
+    it('implements D1Storage interface', () => {
+      expect(typeof adapter.query).toBe('function');
+      expect(typeof adapter.execute).toBe('function');
     });
   });
 });

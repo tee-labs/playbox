@@ -1,55 +1,34 @@
 import type { KVStorage } from '../interface';
+import { kv } from '@vercel/kv';
 
-interface StoredValue {
-  value: any;
-  expiry?: number;
-}
-
+/**
+ * Vercel KV adapter using Upstash Redis.
+ *
+ * Environment variables required (auto-configured when using Vercel KV):
+ * - KV_REST_API_URL
+ * - KV_REST_API_TOKEN
+ * - KV_REST_API_READ_ONLY_TOKEN (optional)
+ *
+ * Setup: vercel kv create playbox-kv
+ */
 export class VercelKVAdapter implements KVStorage {
-  private store = new Map<string, StoredValue>();
-
   async get(key: string, options?: { type?: string }): Promise<any> {
-    const stored = this.store.get(key);
-    if (!stored) return undefined;
-
-    if (this.isExpired(stored)) {
-      this.store.delete(key);
-      return undefined;
+    if (options?.type === 'json') {
+      return kv.get(key);
     }
-
-    // If type is 'json', parse the stored JSON string
-    if (options?.type === 'json' && typeof stored.value === 'string') {
-      try {
-        return JSON.parse(stored.value);
-      } catch {
-        return stored.value;
-      }
-    }
-
-    return stored.value;
-  }
-
-  private isExpired(stored: StoredValue): boolean {
-    return stored.expiry !== undefined && Date.now() > stored.expiry;
+    return kv.get(key);
   }
 
   async put(key: string, value: any, options?: Record<string, any>): Promise<void> {
-    // Match Cloudflare KV behavior: store objects as JSON strings, keep strings as-is
-    let valueToStore: string;
-    if (typeof value === 'string') {
-      valueToStore = value;
+    if (options?.expirationTtl) {
+      // Vercel KV (Upstash) uses seconds for EX, same as Cloudflare KV expirationTtl
+      await kv.set(key, value, { ex: options.expirationTtl });
     } else {
-      valueToStore = JSON.stringify(value);
+      await kv.set(key, value);
     }
-    
-    const stored: StoredValue = { value: valueToStore };
-    if (options?.expiry !== undefined) {
-      stored.expiry = options.expiry;
-    }
-    this.store.set(key, stored);
   }
 
   async delete(key: string): Promise<void> {
-    this.store.delete(key);
+    await kv.del(key);
   }
 }

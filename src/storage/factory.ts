@@ -9,7 +9,7 @@ export interface StorageAdapters {
 }
 
 export function createStorageAdapters(env: any): StorageAdapters {
-  // Detect platform based on available bindings
+  // Detect platform based on available Cloudflare bindings
   if (env.PLAYBOX_KV && env.PLAYBOX_D1 && env.PLAYBOX_R2) {
     // Cloudflare Workers environment
     return {
@@ -18,7 +18,10 @@ export function createStorageAdapters(env: any): StorageAdapters {
       r2: new CloudflareR2Adapter(env),
     };
   } else {
-    // Vercel environment (or other platforms) - use mock implementations
+    // Vercel environment - adapters connect via environment variables:
+    // KV: KV_REST_API_URL + KV_REST_API_TOKEN
+    // D1: POSTGRES_URL
+    // R2: BLOB_READ_WRITE_TOKEN
     return {
       kv: new VercelKVAdapter(),
       d1: new VercelD1Adapter(),

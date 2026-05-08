@@ -1,82 +1,125 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import type { R2Storage } from '../../../../src/storage/interface';
+
+// Mock @vercel/blob — factory must not reference external variables due to hoisting
+vi.mock('@vercel/blob', () => ({
+  put: vi.fn(),
+  head: vi.fn(),
+  del: vi.fn(),
+  list: vi.fn(),
+}));
+
+// Mock global fetch for get() method
+const mockFetch = vi.fn();
+vi.stubGlobal('fetch', mockFetch);
+
+// Import after mock
 import { VercelR2Adapter } from '../../../../src/storage/vercel/r2';
+import { put as mockPutFn, head as mockHeadFn, del as mockDelFn, list as mockListFn } from '@vercel/blob';
+
+const mockPut = mockPutFn as unknown as ReturnType<typeof vi.fn>;
+const mockHead = mockHeadFn as unknown as ReturnType<typeof vi.fn>;
+const mockDel = mockDelFn as unknown as ReturnType<typeof vi.fn>;
+const mockList = mockListFn as unknown as ReturnType<typeof vi.fn>;
 
 describe('VercelR2Adapter', () => {
-  let adapter: VercelR2Adapter;
+  let adapter: R2Storage;
 
   beforeEach(() => {
+    vi.clearAllMocks();
     adapter = new VercelR2Adapter();
   });
 
   describe('put', () => {
-    it('should store object without options', async () => {
+    it('stores blob with public access', async () => {
+      mockPut.mockResolvedValue({ url: 'https://blob.vercel-storage.com/test-key' });
       await adapter.put('test-key', 'test-body');
-      const result = await adapter.get('test-key');
-      expect(result).toBe('test-body');
+      expect(mockPut).toHaveBeenCalledWith('test-key', 'test-body', { access: 'public' });
     });
 
-    it('should store object with options', async () => {
-      const options = { contentType: 'application/json' };
-      await adapter.put('test-key', { data: 'test' }, options);
-      const result = await adapter.get('test-key');
-      expect(result).toEqual({ data: 'test' });
+    it('stores blob with additional options', async () => {
+      mockPut.mockResolvedValue({ url: 'https://blob.vercel-storage.com/test-key' });
+      await adapter.put('test-key', 'test-body', { contentType: 'text/plain' });
+      expect(mockPut).toHaveBeenCalledWith('test-key', 'test-body', {
+        access: 'public',
+        contentType: 'text/plain',
+      });
     });
   });
 
   describe('get', () => {
-    it('should return stored object', async () => {
-      await adapter.put('test-key', 'test-body');
+    it('returns body stream for existing blob', async () => {
+      mockHead.mockResolvedValue({ url: 'https://blob.vercel-storage.com/test-key' });
+      const mockBody = new ReadableStream({
+        start(controller) {
+          controller.enqueue(new TextEncoder().encode('test-body'));
+          controller.close();
+        },
+      });
+      mockFetch.mockResolvedValue({ body: mockBody });
       const result = await adapter.get('test-key');
-      expect(result).toBe('test-body');
+      expect(result).toBeInstanceOf(ReadableStream);
+      expect(mockHead).toHaveBeenCalledWith('test-key');
     });
 
-    it('should return undefined for non-existent key', async () => {
+    it('returns null for non-existent blob', async () => {
+      mockHead.mockResolvedValue(null);
       const result = await adapter.get('non-existent');
-      expect(result).toBeUndefined();
+      expect(result).toBeNull();
+    });
+
+    it('returns null on error', async () => {
+      mockHead.mockRejectedValue(new Error('Not found'));
+      const result = await adapter.get('error-key');
+      expect(result).toBeNull();
     });
   });
 
   describe('delete', () => {
-    it('should delete stored object', async () => {
-      await adapter.put('test-key', 'test-body');
+    it('deletes blob from Vercel Blob', async () => {
+      mockDel.mockResolvedValue(undefined);
       await adapter.delete('test-key');
-      const result = await adapter.get('test-key');
-      expect(result).toBeUndefined();
-    });
-
-    it('should not throw when deleting non-existent key', async () => {
-      await expect(adapter.delete('non-existent')).resolves.not.toThrow();
+      expect(mockDel).toHaveBeenCalledWith('test-key');
     });
   });
 
   describe('list', () => {
-    it('should list all keys without prefix', async () => {
-      await adapter.put('file1.txt', 'content1');
-      await adapter.put('file2.txt', 'content2');
-      await adapter.put('dir/file3.txt', 'content3');
-
+    it('lists all blobs without prefix', async () => {
+      mockList.mockResolvedValue({
+        blobs: [
+          { pathname: 'file1.txt' },
+          { pathname: 'file2.txt' },
+        ],
+      });
       const keys = await adapter.list();
-      expect(keys).toHaveLength(3);
-      expect(keys).toContain('file1.txt');
-      expect(keys).toContain('file2.txt');
-      expect(keys).toContain('dir/file3.txt');
+      expect(keys).toEqual(['file1.txt', 'file2.txt']);
     });
 
-    it('should list keys with prefix', async () => {
-      await adapter.put('dir/file1.txt', 'content1');
-      await adapter.put('dir/file2.txt', 'content2');
-      await adapter.put('other/file3.txt', 'content3');
-
+    it('lists blobs with prefix', async () => {
+      mockList.mockResolvedValue({
+        blobs: [
+          { pathname: 'dir/file1.txt' },
+          { pathname: 'dir/file2.txt' },
+        ],
+      });
       const keys = await adapter.list('dir/');
-      expect(keys).toHaveLength(2);
-      expect(keys).toContain('dir/file1.txt');
-      expect(keys).toContain('dir/file2.txt');
-      expect(keys).not.toContain('other/file3.txt');
+      expect(mockList).toHaveBeenCalledWith({ prefix: 'dir/' });
+      expect(keys).toEqual(['dir/file1.txt', 'dir/file2.txt']);
     });
 
-    it('should return empty array when no keys match prefix', async () => {
+    it('returns empty array when no blobs match', async () => {
+      mockList.mockResolvedValue({ blobs: [] });
       const keys = await adapter.list('non-existent/');
       expect(keys).toEqual([]);
+    });
+  });
+
+  describe('interface compliance', () => {
+    it('implements R2Storage interface', () => {
+      expect(typeof adapter.put).toBe('function');
+      expect(typeof adapter.get).toBe('function');
+      expect(typeof adapter.delete).toBe('function');
+      expect(typeof adapter.list).toBe('function');
     });
   });
 });
