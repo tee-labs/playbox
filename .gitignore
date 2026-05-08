@@ -81,3 +81,4 @@ cloudflare-env.d.ts
 .code-review-graph/
 playwright-report/
 test-results/
+.sisyphus/
