@@ -251,7 +251,7 @@ npm run dev
 
 ```bash
 # Deploy to Cloudflare
-npm run deploy
+npm run deploy:cloudflare
 
 # Preview deployment
 npm run preview
