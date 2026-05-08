@@ -18,15 +18,12 @@ import {
   Select,
   InputNumber,
   Typography,
-  Tooltip,
 } from 'antd';
 import {
   PlusOutlined,
   ReloadOutlined,
   DeleteOutlined,
   EditOutlined,
-  EyeOutlined,
-  EyeInvisibleOutlined,
   SettingOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
@@ -105,7 +102,6 @@ export default function ProviderConfigTab() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingProvider, setEditingProvider] = useState<ProviderRow | null>(null);
   const [modalLoading, setModalLoading] = useState(false);
-  const [visibleKeys, setVisibleKeys] = useState<Set<number>>(new Set());
   const [form] = Form.useForm<FormValues>();
 
   const fetchProviders = useCallback(async () => {
@@ -130,23 +126,6 @@ export default function ProviderConfigTab() {
   useEffect(() => {
     fetchProviders();
   }, [fetchProviders]);
-
-  const maskKey = (key: string) => {
-    if (key.length <= 8) return key;
-    return key.substring(0, 4) + '••••••' + key.substring(key.length - 4);
-  };
-
-  const toggleKeyVisibility = (id: number) => {
-    setVisibleKeys((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(id)) {
-        newSet.delete(id);
-      } else {
-        newSet.add(id);
-      }
-      return newSet;
-    });
-  };
 
   const handleToggleEnabled = async (id: number, currentEnabled: boolean) => {
     try {
@@ -279,33 +258,11 @@ export default function ProviderConfigTab() {
       dataIndex: 'key',
       key: 'key',
       width: 200,
-      render: (key: string, record) => {
-        const isVisible = visibleKeys.has(record.id);
-        const displayKey = isVisible ? key : maskKey(key);
-        return (
-          <Space>
-            <Input
-              value={displayKey}
-              readOnly
-              style={{
-                width: 150,
-                fontFamily: "'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace",
-                fontSize: 12,
-              }}
-              suffix={
-                <Tooltip title={isVisible ? 'Hide key' : 'Show key'}>
-                  <Button
-                    type="text"
-                    size="small"
-                    icon={isVisible ? <EyeInvisibleOutlined /> : <EyeOutlined />}
-                    onClick={() => toggleKeyVisibility(record.id)}
-                  />
-                </Tooltip>
-              }
-            />
-          </Space>
-        );
-      },
+      render: (key: string) => (
+        <code style={{ fontSize: '12px', fontFamily: "'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace" }}>
+          {key}
+        </code>
+      ),
     },
     {
       title: 'Models',
