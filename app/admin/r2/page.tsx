@@ -1,7 +1,23 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Card, Table, Input, Button, Space, Spin, Alert, Popconfirm, message, Upload, Modal, Drawer, Tag, Typography } from 'antd';
+import {
+  Card,
+  Table,
+  Input,
+  Button,
+  Space,
+  Spin,
+  Alert,
+  Popconfirm,
+  message,
+  Upload,
+  Modal,
+  Drawer,
+  Tag,
+  Typography,
+  Dropdown,
+} from 'antd';
 const { Text } = Typography;
 import {
   SearchOutlined,
@@ -14,6 +30,7 @@ import {
   CloudServerOutlined,
   FolderOutlined,
   FileOutlined,
+  MoreOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import type { UploadProps } from 'antd';
@@ -83,6 +100,14 @@ export default function R2AdminPage() {
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [viewingKey, setViewingKey] = useState<string | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const formatSize = (bytes: number): string => {
     if (bytes < 1024) return `${bytes} B`;
@@ -311,19 +336,53 @@ export default function R2AdminPage() {
       title: 'Actions',
       key: '_actions',
       width: 150,
-      render: (_, record) => (
-        <Space>
-          {record.type === 'file' && (
-            <>
-              <Button type="text" icon={<DownloadOutlined />} onClick={() => handleDownload(record.key)} size="small" />
-              <Button type="text" icon={<EyeOutlined />} onClick={() => handleView(record.key)} size="small" />
-            </>
-          )}
-          <Popconfirm title="Delete this object?" onConfirm={() => handleDelete(record.key)} okText="Delete" okType="danger">
-            <Button type="text" icon={<DeleteOutlined />} danger size="small" />
-          </Popconfirm>
-        </Space>
-      ),
+      render: (_, record) => {
+        if (isMobile) {
+          const items = [
+            ...(record.type === 'file'
+              ? [
+                  {
+                    key: 'download',
+                    icon: <DownloadOutlined />,
+                    label: 'Download',
+                    onClick: () => handleDownload(record.key),
+                  },
+                  {
+                    key: 'view',
+                    icon: <EyeOutlined />,
+                    label: 'View',
+                    onClick: () => handleView(record.key),
+                  },
+                ]
+              : []),
+            {
+              key: 'delete',
+              icon: <DeleteOutlined />,
+              label: 'Delete',
+              danger: true,
+              onClick: () => handleDelete(record.key),
+            },
+          ];
+          return (
+            <Dropdown menu={{ items }} trigger={['click']}>
+              <Button type="text" icon={<MoreOutlined />} size="small" />
+            </Dropdown>
+          );
+        }
+        return (
+          <Space>
+            {record.type === 'file' && (
+              <>
+                <Button type="text" icon={<DownloadOutlined />} onClick={() => handleDownload(record.key)} size="small" />
+                <Button type="text" icon={<EyeOutlined />} onClick={() => handleView(record.key)} size="small" />
+              </>
+            )}
+            <Popconfirm title="Delete this object?" onConfirm={() => handleDelete(record.key)} okText="Delete" okType="danger">
+              <Button type="text" icon={<DeleteOutlined />} danger size="small" />
+            </Popconfirm>
+          </Space>
+        );
+      },
     },
   ];
 

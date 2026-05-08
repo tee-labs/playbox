@@ -1,7 +1,8 @@
 'use client';
 
-import { Table, Button, Space, Popconfirm, Typography } from 'antd';
-import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { useState, useEffect } from 'react';
+import { Table, Button, Space, Popconfirm, Typography, Dropdown } from 'antd';
+import { EditOutlined, DeleteOutlined, MoreOutlined } from '@ant-design/icons';
 import type { ColumnsType, TableProps } from 'antd/es/table';
 import type { SorterResult } from 'antd/es/table/interface';
 import type { TableRow, ColumnInfo } from '../types';
@@ -40,6 +41,15 @@ export default function DataTable({
   onBatchDelete,
   loading,
 }: DataTableProps) {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   const tableColumns: ColumnsType<TableRow> = [
     {
       title: 'rowid',
@@ -67,22 +77,54 @@ export default function DataTable({
     {
       title: 'Actions',
       key: '_actions',
-      width: 120,
+      width: isMobile ? 60 : 120,
       fixed: 'right',
-      render: (_, record) => (
-        <Space>
-          <Button type="text" icon={<EditOutlined />} onClick={() => onEdit(record)} size="small" />
-          <Popconfirm
-            title="Delete this row?"
-            description="This action cannot be undone."
-            onConfirm={() => onDelete(record._rowid)}
-            okText="Delete"
-            okType="danger"
-          >
-            <Button type="text" icon={<DeleteOutlined />} danger size="small" />
-          </Popconfirm>
-        </Space>
-      ),
+      render: (_, record) => {
+        if (isMobile) {
+          return (
+            <Dropdown
+              menu={{
+                items: [
+                  {
+                    key: 'edit',
+                    icon: <EditOutlined />,
+                    label: 'Edit',
+                    onClick: () => onEdit(record),
+                  },
+                  {
+                    key: 'delete',
+                    icon: <DeleteOutlined />,
+                    label: 'Delete',
+                    danger: true,
+                    onClick: () => {
+                      if (window.confirm('Delete this row? This action cannot be undone.')) {
+                        onDelete(record._rowid);
+                      }
+                    },
+                  },
+                ],
+              }}
+              trigger={['click']}
+            >
+              <Button type="text" icon={<MoreOutlined />} size="large" />
+            </Dropdown>
+          );
+        }
+        return (
+          <Space>
+            <Button type="text" icon={<EditOutlined />} onClick={() => onEdit(record)} size="small" />
+            <Popconfirm
+              title="Delete this row?"
+              description="This action cannot be undone."
+              onConfirm={() => onDelete(record._rowid)}
+              okText="Delete"
+              okType="danger"
+            >
+              <Button type="text" icon={<DeleteOutlined />} danger size="small" />
+            </Popconfirm>
+          </Space>
+        );
+      },
     },
   ];
 

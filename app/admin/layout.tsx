@@ -333,7 +333,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </Sider>
           )}
           {isMobile && (
-            <Drawer title="Admin" placement="left" closable onClose={() => setDrawerOpen(false)} open={drawerOpen} width={250}>
+            <Drawer title="Admin" placement="left" closable onClose={() => setDrawerOpen(false)} open={drawerOpen} size="85%">
               <Menu mode="inline" selectedKeys={[getSelectedKey()]} items={menuItems} onClick={handleMenuClick} />
             </Drawer>
           )}

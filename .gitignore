@@ -82,3 +82,5 @@ cloudflare-env.d.ts
 playwright-report/
 test-results/
 .sisyphus/
+mobile-*.yml
+.playwright-cli

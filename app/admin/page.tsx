@@ -6,6 +6,17 @@ import { Select, Spin, Alert, Card, Row, Col, Statistic } from 'antd';
 import { TableOutlined, DatabaseOutlined } from '@ant-design/icons';
 import type { TableSchema, TableRow, ColumnInfo } from './types';
 
+const useIsMobile = () => {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+  return isMobile;
+};
+
 interface TableActionResponse {
   success: boolean;
   error?: string;
@@ -31,6 +42,7 @@ const EditRowModal = dynamic(() => import('./components/EditRowModal'), { ssr: f
 const ImportModal = dynamic(() => import('./components/ImportModal'), { ssr: false });
 
 export default function AdminPage() {
+  const isMobile = useIsMobile();
   const [tables, setTables] = useState<TableSchema[]>([]);
   const [selectedTable, setSelectedTable] = useState<string | null>(null);
   const [selectedTableSchema, setSelectedTableSchema] = useState<TableSchema | null>(null);
@@ -229,23 +241,40 @@ export default function AdminPage() {
       )}
 
       <Card style={{ marginBottom: 16 }}>
-        <Row gutter={16} align="middle">
-          <Col>
-            <DatabaseOutlined style={{ fontSize: 24, color: '#1890ff' }} />
-          </Col>
-          <Col flex="auto">
+        {isMobile ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <DatabaseOutlined style={{ fontSize: 24, color: '#1890ff' }} />
+              <span style={{ fontSize: 16, fontWeight: 500 }}>Select Table</span>
+            </div>
             <Select
-              style={{ width: 300 }}
+              style={{ width: '100%' }}
               placeholder="Select a table"
               value={selectedTable}
               onChange={handleTableChange}
               options={tables.map((t) => ({ label: t.name, value: t.name }))}
             />
-          </Col>
-          <Col>
             <Statistic title="Tables" value={tables.length} prefix={<TableOutlined />} />
-          </Col>
-        </Row>
+          </div>
+        ) : (
+          <Row gutter={16} align="middle">
+            <Col>
+              <DatabaseOutlined style={{ fontSize: 24, color: '#1890ff' }} />
+            </Col>
+            <Col flex="auto">
+              <Select
+                style={{ width: 300 }}
+                placeholder="Select a table"
+                value={selectedTable}
+                onChange={handleTableChange}
+                options={tables.map((t) => ({ label: t.name, value: t.name }))}
+              />
+            </Col>
+            <Col>
+              <Statistic title="Tables" value={tables.length} prefix={<TableOutlined />} />
+            </Col>
+          </Row>
+        )}
       </Card>
 
       {selectedTableSchema && (

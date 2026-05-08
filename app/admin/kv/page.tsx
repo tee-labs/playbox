@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import dynamic from 'next/dynamic';
-import { Card, Table, Input, Button, Space, Spin, Alert, Popconfirm, message } from 'antd';
+import { Card, Table, Input, Button, Space, Spin, Alert, Popconfirm, message, Dropdown } from 'antd';
 import {
   SearchOutlined,
   ClearOutlined,
@@ -13,6 +13,7 @@ import {
   EditOutlined,
   DeleteOutlined,
   DatabaseOutlined,
+  MoreOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import NamespaceSelector from './components/NamespaceSelector';
@@ -43,6 +44,7 @@ const KVImportModal = dynamic(() => import('./components/KVImportModal'), { ssr:
 const KeyValueDrawer = dynamic(() => import('./components/KeyValueDrawer'), { ssr: false });
 
 export default function KVAdminPage() {
+  const [isMobile, setIsMobile] = useState(false);
   const [namespaces, setNamespaces] = useState<KVNamespaceOption[]>([]);
   const [selectedNamespace, setSelectedNamespace] = useState<string>('');
   const [keys, setKeys] = useState<KVKeyDisplay[]>([]);
@@ -58,6 +60,13 @@ export default function KVAdminPage() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editingKey, setEditingKey] = useState<string | null>(null);
   const [viewingKey, setViewingKey] = useState<string | null>(null);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const fetchNamespaces = useCallback(async () => {
     try {
@@ -226,16 +235,54 @@ export default function KVAdminPage() {
     {
       title: 'Actions',
       key: '_actions',
-      width: 150,
-      render: (_, record) => (
-        <Space>
-          <Button type="text" icon={<EyeOutlined />} onClick={() => handleView(record.name)} size="small" />
-          <Button type="text" icon={<EditOutlined />} onClick={() => handleEdit(record.name)} size="small" />
-          <Popconfirm title="Delete this key?" onConfirm={() => handleDelete(record.name)} okText="Delete" okType="danger">
-            <Button type="text" icon={<DeleteOutlined />} danger size="small" />
-          </Popconfirm>
-        </Space>
-      ),
+      width: isMobile ? 60 : 150,
+      render: (_, record) => {
+        if (isMobile) {
+          return (
+            <Dropdown
+              menu={{
+                items: [
+                  {
+                    key: 'view',
+                    icon: <EyeOutlined />,
+                    label: 'View',
+                    onClick: () => handleView(record.name),
+                  },
+                  {
+                    key: 'edit',
+                    icon: <EditOutlined />,
+                    label: 'Edit',
+                    onClick: () => handleEdit(record.name),
+                  },
+                  {
+                    key: 'delete',
+                    icon: <DeleteOutlined />,
+                    label: 'Delete',
+                    danger: true,
+                    onClick: () => {
+                      if (window.confirm('Delete this key?')) {
+                        handleDelete(record.name);
+                      }
+                    },
+                  },
+                ],
+              }}
+              trigger={['click']}
+            >
+              <Button type="text" icon={<MoreOutlined />} size="large" />
+            </Dropdown>
+          );
+        }
+        return (
+          <Space>
+            <Button type="text" icon={<EyeOutlined />} onClick={() => handleView(record.name)} size="small" />
+            <Button type="text" icon={<EditOutlined />} onClick={() => handleEdit(record.name)} size="small" />
+            <Popconfirm title="Delete this key?" onConfirm={() => handleDelete(record.name)} okText="Delete" okType="danger">
+              <Button type="text" icon={<DeleteOutlined />} danger size="small" />
+            </Popconfirm>
+          </Space>
+        );
+      },
     },
   ];
 
