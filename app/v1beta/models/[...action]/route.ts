@@ -55,7 +55,7 @@ function parseActionSegment(actionSegment: string): { model: string; action: str
 export async function POST(request: NextRequest, { params }: { params: Promise<{ action: string[] }> }) {
   const logger = createLogger();
 
-  const { env, ctx } = getTypedContext();
+  const { env } = getTypedContext();
 
   const authResult = await authenticate(request, env);
   if (!authResult) {
@@ -100,7 +100,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     const requestedModel = pathModel || rawBody.model || 'gemini-2.5-flash';
     const isStream = action === 'streamGenerateContent' || url.searchParams.get('alt') === 'sse';
 
-    const config = await getConfig(env);
+    const config = await getConfig();
     const { name: providerName, provider, realModel } = resolveProvider(config, requestedModel, 'gemini');
 
     if (!provider) {
@@ -137,12 +137,11 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     let fetchHeaders: Record<string, string> = {};
 
     for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-      const apiKeyValue = await protocol.getApiKey(env, provider, ctx);
+      const apiKeyValue = await protocol.getApiKey(env, provider);
       fetchUrl = await protocol.getEndpoint(provider, realModel, isStream, apiKeyValue);
-      fetchHeaders = await protocol.getHeaders(provider, env, ctx, apiKeyValue);
+      fetchHeaders = await protocol.getHeaders(provider, env, apiKeyValue);
 
-      const requestBody =
-        provider.type === 'gemini-cli' ? { request: geminiRequest, model: realModel, project: 'steadfast-aloe-jm6t3' } : geminiRequest;
+      const requestBody = geminiRequest;
 
       lastResponse = await fetch(fetchUrl, {
         method: 'POST',
@@ -185,7 +184,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
           statusText: lastResponse.statusText,
           headers: responseHeaders,
           url: fetchUrl,
-          request: provider.type === 'gemini-cli' ? { request: geminiRequest, model: realModel } : geminiRequest,
+          request: geminiRequest,
           body: responseBody,
         },
         provider: { name: providerName, type: provider.type },

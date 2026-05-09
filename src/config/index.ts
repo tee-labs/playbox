@@ -1,6 +1,5 @@
 import { getDefaultConfig, Config } from './default';
 import { ProtocolFamily, ProviderConfig } from '../types/provider';
-import type { Env } from '../types';
 
 export type { ProviderConfig } from '../types/provider';
 
@@ -10,8 +9,8 @@ export interface ResolvedProvider {
   realModel: string;
 }
 
-export async function getConfig(env: Env): Promise<Config> {
-  return getDefaultConfig(env);
+export async function getConfig(): Promise<Config> {
+  return getDefaultConfig();
 }
 
 export function resolveProvider(config: Config, model: string, family?: ProtocolFamily): ResolvedProvider {

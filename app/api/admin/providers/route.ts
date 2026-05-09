@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
       return createJsonResponse({ error: 'name, type, family, endpoint, and key are required' }, 400);
     }
 
-    const validTypes = ['openai', 'anthropic', 'google', 'gemini-cli', 'gemini', 'worker'];
+    const validTypes = ['openai', 'anthropic', 'google', 'gemini'];
     if (!validTypes.includes(type)) {
       return createJsonResponse({ error: `Invalid type. Must be one of: ${validTypes.join(', ')}` }, 400);
     }

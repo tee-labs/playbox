@@ -3,7 +3,6 @@ import { ProtocolFactory } from '../../../src/protocols/index';
 import { createOpenAIProtocol } from '../../../src/protocols/openai';
 import { createAnthropicProtocol } from '../../../src/protocols/anthropic';
 import { createGoogleProtocol } from '../../../src/protocols/google';
-import { createGeminiCliProtocol } from '../../../src/protocols/gemini-cli';
 
 describe('ProtocolFactory', () => {
   describe('get', () => {
@@ -25,14 +24,6 @@ describe('ProtocolFactory', () => {
 
     it('should return Google protocol', () => {
       const protocol = ProtocolFactory.get('google');
-
-      expect(protocol.getApiKey).toBeDefined();
-      expect(protocol.getEndpoint).toBeDefined();
-      expect(protocol.getHeaders).toBeDefined();
-    });
-
-    it('should return Gemini CLI protocol', () => {
-      const protocol = ProtocolFactory.get('gemini-cli');
 
       expect(protocol.getApiKey).toBeDefined();
       expect(protocol.getEndpoint).toBeDefined();
@@ -97,11 +88,6 @@ describe('ProtocolFactory', () => {
     it('should export createGoogleProtocol', () => {
       expect(createGoogleProtocol).toBeDefined();
       expect(typeof createGoogleProtocol).toBe('function');
-    });
-
-    it('should export createGeminiCliProtocol', () => {
-      expect(createGeminiCliProtocol).toBeDefined();
-      expect(typeof createGeminiCliProtocol).toBe('function');
     });
   });
 });

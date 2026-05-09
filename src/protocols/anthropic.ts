@@ -1,5 +1,5 @@
 import type { ProtocolBody } from '../types';
-import { ProtocolAdapter, Env, Provider, ExecutionContext } from './types';
+import { ProtocolAdapter, Env, Provider } from './types';
 import { KeyManager } from '../managers/key';
 import { createSSEParser, SSEParser, SSEEvent } from '../utils/sse-parser';
 
@@ -7,8 +7,7 @@ export function createAnthropicProtocol(): ProtocolAdapter {
   return {
     name: 'anthropic',
     getAttempt: () => 3,
-    getApiKey: async (env: Env, provider: Provider, ctx: ExecutionContext): Promise<string> =>
-      KeyManager.getRandomApiKey(env, provider, ctx),
+    getApiKey: async (env: Env, provider: Provider): Promise<string> => KeyManager.getRandomApiKey(provider),
     getEndpoint: async (
       provider: Provider,
       _model: string,
@@ -19,7 +18,7 @@ export function createAnthropicProtocol(): ProtocolAdapter {
       const baseUrl = provider.endpoint ?? 'https://api.anthropic.com';
       return `${baseUrl}/v1/messages`;
     },
-    getHeaders: async (provider: Provider, env: Env, ctx: ExecutionContext, apiKey: string): Promise<Record<string, string>> => {
+    getHeaders: async (provider: Provider, _env: Env, apiKey: string): Promise<Record<string, string>> => {
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
         'anthropic-version': '2023-06-01',

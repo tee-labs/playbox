@@ -60,8 +60,8 @@ async function fetchGeminiModels(baseUrl: string, apiKey: string): Promise<Model
 
 export async function GET(_request: NextRequest) {
   try {
-    const { env, ctx } = getTypedContext();
-    const config = await getConfig(env);
+    const { env: _env } = getTypedContext();
+    const config = await getConfig();
 
     const providersByFamily: Record<ProtocolFamily, ProviderModels[]> = {
       openai: [],
@@ -82,7 +82,7 @@ export async function GET(_request: NextRequest) {
 
       let apiKey: string;
       try {
-        apiKey = await KeyManager.getRandomApiKey(env, p, ctx);
+        apiKey = await KeyManager.getRandomApiKey(p);
       } catch (keyError) {
         providerInfo.error = `No API key found: ${(keyError as Error).message}`;
         providerInfo.fetched =

@@ -52,9 +52,9 @@ async function fetchGeminiModels(baseUrl: string, apiKey: string): Promise<Model
 export async function GET(_request: NextRequest, { params }: { params: Promise<{ provider: string }> }) {
   try {
     const { provider: providerName } = await params;
-    const { env: rawEnv, ctx } = getCloudflareContext();
-    const env = rawEnv as unknown as Env;
-    const config = await getConfig(env);
+    const { env: _env } = getCloudflareContext();
+    const _unusedEnv = _env as unknown as Env;
+    const config = await getConfig();
 
     const provider = config.providers[providerName] as ProviderConfig | undefined;
     if (!provider) {
@@ -63,7 +63,7 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
 
     let apiKey: string;
     try {
-      apiKey = await KeyManager.getRandomApiKey(env, provider, ctx);
+      apiKey = await KeyManager.getRandomApiKey(provider);
     } catch (keyError) {
       return createJsonResponse(
         {

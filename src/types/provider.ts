@@ -14,12 +14,9 @@ export type ProtocolFamily = 'openai' | 'anthropic' | 'gemini' | 'embedding' | '
  * Specific protocol types within each family
  */
 export type OpenAIProtocolType = 'openai' | 'anthropic';
-export type GeminiProtocolType = 'google' | 'gemini-cli' | 'gemini';
+export type GeminiProtocolType = 'google' | 'gemini';
 
-/**
- * All supported protocol types
- */
-export type ProtocolType = OpenAIProtocolType | GeminiProtocolType | 'worker';
+export type ProtocolType = OpenAIProtocolType | GeminiProtocolType;
 
 /**
  * Authentication type for API requests

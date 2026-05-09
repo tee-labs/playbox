@@ -20,7 +20,7 @@ export interface ExecutionContext {
 export interface ProtocolAdapter {
   name: string;
   getAttempt(): number;
-  getApiKey(env: Env, provider: Provider, ctx: ExecutionContext): Promise<string>;
+  getApiKey(env: Env, provider: Provider): Promise<string>;
   getEndpoint(
     provider: Provider,
     model: string,
@@ -29,7 +29,7 @@ export interface ProtocolAdapter {
     isEmbedding?: boolean,
     isRerank?: boolean
   ): Promise<string>;
-  getHeaders(provider: Provider, env: Env, ctx: ExecutionContext, apiKey: string): Promise<Record<string, string>>;
+  getHeaders(provider: Provider, env: Env, apiKey: string): Promise<Record<string, string>>;
 
   // Optional: Request/response conversion (only for protocol-to-protocol conversion)
   toStandardRequest?(body: ProtocolBody): ProtocolBody;

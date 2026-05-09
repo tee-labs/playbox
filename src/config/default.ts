@@ -1,5 +1,8 @@
 import { Provider, ProviderConfig } from '../types/provider';
 import type { Env } from '../types';
+import { unstable_cache } from 'next/cache';
+import { revalidateTag } from 'next/cache';
+import { getCloudflareContext } from '@opennextjs/cloudflare';
 
 export interface Config {
   providers: Provider;
@@ -52,33 +55,26 @@ async function loadProvidersFromD1(env: Env): Promise<Config | null> {
   }
 }
 
-const CONFIG_CACHE_KEY = 'config:default';
-const CONFIG_CACHE_TTL = 3600;
+const _loadConfigFromD1 = async (): Promise<Config | null> => {
+  const raw = getCloudflareContext();
+  const env = raw.env as unknown as Env;
+  return loadProvidersFromD1(env);
+};
 
-export async function getDefaultConfig(env: Env): Promise<Config> {
-  if (env.PLAYBOX_KV) {
-    try {
-      const cached = await env.PLAYBOX_KV.get(CONFIG_CACHE_KEY, { type: 'json' });
-      if (cached) {
-        return cached as Config;
-      }
-    } catch {
-      // Cache read failed, fall through to D1
-    }
-  }
+export const getDefaultConfigCached = unstable_cache(
+  _loadConfigFromD1,
+  ['config-default'], // cache key prefix
+  { tags: ['config-default'], revalidate: 3600 } // 1 hour TTL
+);
 
-  const config = await loadProvidersFromD1(env);
+export async function getDefaultConfig(): Promise<Config> {
+  const config = await getDefaultConfigCached();
   if (!config) {
     throw new Error('No provider configuration found. Please configure providers in D1 database.');
   }
-
-  if (env.PLAYBOX_KV) {
-    try {
-      await env.PLAYBOX_KV.put(CONFIG_CACHE_KEY, JSON.stringify(config), { expirationTtl: CONFIG_CACHE_TTL });
-    } catch {
-      // Cache write failed, but we still have the config
-    }
-  }
-
   return config;
+}
+
+export async function revalidateConfigCache(): Promise<void> {
+  revalidateTag('config-default');
 }

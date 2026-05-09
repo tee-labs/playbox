@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const config = await getConfig(env);
+    const config = await getConfig();
     const providers = config.providers;
 
     const anthropicVersion = request.headers.get('anthropic-version');

@@ -21,7 +21,7 @@ interface ChatBody {
 export async function POST(request: NextRequest) {
   const logger = createLogger();
 
-  const { env, ctx } = getTypedContext();
+  const { env } = getTypedContext();
 
   const authResult = await authenticate(request, env);
   if (!authResult) {
@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
     const requestedModel = rawBody.model;
     const isStream = rawBody.stream === true;
 
-    const config = await getConfig(env);
+    const config = await getConfig();
     const { name: providerName, provider, realModel } = resolveProvider(config, requestedModel, 'openai');
     if (!provider) {
       throw new Error(`No provider found for model: ${requestedModel}`);
@@ -71,9 +71,9 @@ export async function POST(request: NextRequest) {
     let fetchUrl = '';
     let fetchHeaders: Record<string, string> = {};
     for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-      const upstreamApiKey = await upstreamProtocol.getApiKey(env, provider, ctx);
+      const upstreamApiKey = await upstreamProtocol.getApiKey(env, provider);
       fetchUrl = await upstreamProtocol.getEndpoint(provider, realModel, isStream, upstreamApiKey);
-      fetchHeaders = await upstreamProtocol.getHeaders(provider, env, ctx, upstreamApiKey);
+      fetchHeaders = await upstreamProtocol.getHeaders(provider, env, upstreamApiKey);
       lastResponse = await fetch(fetchUrl, {
         method: 'POST',
         headers: fetchHeaders,

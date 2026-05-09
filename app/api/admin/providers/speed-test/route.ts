@@ -79,9 +79,9 @@ function buildGeminiRequest(model: string, endpoint: string, apiKey: string): Re
 
 export async function POST(request: NextRequest) {
   try {
-    const { env: rawEnv, ctx } = getCloudflareContext();
-    const env = rawEnv as unknown as Env;
-    const config = await getConfig(env);
+    const { env: _env } = getCloudflareContext();
+    const _unusedEnv = _env as unknown as Env;
+    const config = await getConfig();
 
     const body = (await request.json()) as SpeedTestRequest;
     const { provider: providerName, model } = body;
@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
 
     let apiKey: string;
     try {
-      apiKey = await KeyManager.getRandomApiKey(env, provider, ctx);
+      apiKey = await KeyManager.getRandomApiKey(provider);
     } catch (keyError) {
       return createJsonResponse({
         success: true,
