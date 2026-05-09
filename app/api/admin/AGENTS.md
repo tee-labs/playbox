@@ -2,7 +2,7 @@
 
 ## OVERVIEW
 
-Admin API endpoints for KV, D1 tables, analytics, downloads, API testing, and more with full CRUD and batch operations.
+Admin API endpoints for KV, D1 tables, analytics, and more with full CRUD and batch operations.
 
 ## STRUCTURE
 
@@ -21,17 +21,11 @@ api/admin/
 │       ├── rows/[rowid]/route.ts   # Row CRUD (GET, PUT, DELETE)
 │       └── batch/route.ts          # Batch delete/import (POST)
 ├── analytics/route.ts              # Analytics Engine queries (GET)
-├── download/history/route.ts       # Download history (GET)
-├── api-test/route.ts               # Execute HTTP requests (POST)
-├── api-test/history/route.ts       # Test history CRUD (GET, POST, DELETE)
 ├── llm-keys/route.ts               # LLM key management (GET, POST)
 ├── llm-keys/[id]/route.ts          # Single key operations (GET, PUT, DELETE)
-├── short-url/route.ts              # Short URL CRUD (GET, POST, PUT, DELETE)
 ├── github-gists/route.ts            # GitHub Gists management (GET, POST)
 ├── github-gists/[id]/route.ts       # Single gist operations (GET, PUT, DELETE)
-├── langextract/route.ts            # Language extraction (GET, POST)
 ├── domains/route.ts                # Domain CRUD (GET, POST, PUT, DELETE)
-├── email/route.ts                  # Email configuration (GET, PUT)
 ├── providers/route.ts              # Provider config (GET, POST, PUT, DELETE)
 ├── providers/speed-test/route.ts   # Provider speed test (POST)
 └── providers/models/route.ts       # Provider models (GET)
@@ -45,15 +39,10 @@ api/admin/
 | Add table endpoint | `tables/[table]/`    | Use `validateTable()` helper, `escapeColumnName()` for SQL safety |
 | Batch operations   | `*/batch/route.ts`   | Support JSON/CSV import, batch delete                             |
 | Analytics query    | `analytics/route.ts` | Cloudflare Analytics Engine SQL API                               |
-| API test execution | `api-test/route.ts`  | SSRF validation via `validateSafeUrl()`                           |
 | LLM key management | `llm-keys/`          | CRUD for LLM API keys in D1                                       |
-| Short URL CRUD     | `short-url/`         | Create/resolve short URLs                                         |
 | GitHub Gists       | `github-gists/`      | GitHub Gists management                                           |
-| LangExtract        | `langextract/`       | Language extraction (GET/POST)                                    |
 | Domain management  | `domains/`           | Domain CRUD                                                       |
-| Email config       | `email/`             | Email configuration (GET/PUT)                                     |
 | Provider config    | `providers/`         | Provider CRUD + speed test + models                               |
-| API test history   | `api-test/history/`  | Test execution history                                            |
 
 ## CONVENTIONS
 

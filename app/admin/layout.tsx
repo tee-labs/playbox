@@ -5,17 +5,13 @@ import { ConfigProvider, App as AntApp, Layout, Menu, Typography, Button, Drawer
 import {
   DatabaseOutlined,
   CloudOutlined,
-  DownloadOutlined,
   MessageOutlined,
   BarChartOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   ApiOutlined,
   AppstoreOutlined,
-  MailOutlined,
   GlobalOutlined,
-  LinkOutlined,
-  ExperimentOutlined,
   GithubOutlined,
 } from '@ant-design/icons';
 import Link from 'next/link';
@@ -48,19 +44,9 @@ const menuItems = [
     label: <Link href="/admin/providers">Providers</Link>,
   },
   {
-    key: 'download',
-    icon: <DownloadOutlined />,
-    label: <Link href="/admin/download">Download</Link>,
-  },
-  {
     key: 'chat',
     icon: <MessageOutlined />,
     label: <Link href="/admin/chat">Chat Test</Link>,
-  },
-  {
-    key: 'api-test',
-    icon: <ApiOutlined />,
-    label: <Link href="/admin/api-test">API Test</Link>,
   },
   {
     key: 'analytics',
@@ -68,24 +54,9 @@ const menuItems = [
     label: <Link href="/admin/analytics">Analytics</Link>,
   },
   {
-    key: 'email',
-    icon: <MailOutlined />,
-    label: <Link href="/admin/email">Email Test</Link>,
-  },
-  {
     key: 'domains',
     icon: <GlobalOutlined />,
     label: <Link href="/admin/domains">Domains</Link>,
-  },
-  {
-    key: 'langextract',
-    icon: <ExperimentOutlined />,
-    label: <Link href="/admin/langextract">LangExtract</Link>,
-  },
-  {
-    key: 'short-url',
-    icon: <LinkOutlined />,
-    label: <Link href="/admin/short-url">Short URL</Link>,
   },
   {
     key: 'github-gists',
@@ -98,14 +69,9 @@ const PATH_KEY_MAP: Record<string, string> = {
   'llm-keys': 'llm-keys',
   'kv': 'kv',
   'providers': 'providers',
-  'download': 'download',
   'chat': 'chat',
-  'api-test': 'api-test',
   'analytics': 'analytics',
-  'email': 'email',
   'domains': 'domains',
-  'langextract': 'langextract',
-  'short-url': 'short-url',
   'github-gists': 'github-gists',
 };
 
@@ -114,14 +80,9 @@ const PAGE_TITLE_MAP: Record<string, string> = {
   'llm-keys': 'API Key Management',
   'kv': 'KV Storage Management',
   'providers': 'Providers',
-  'download': 'File Download Proxy',
   'chat': 'Chat Test',
-  'api-test': 'API Test',
   'analytics': 'API Analytics',
-  'email': 'Email Test',
   'domains': 'Domain Query',
-  'langextract': 'LangExtract',
-  'short-url': 'Short URL',
   'github-gists': 'GitHub Gists',
 };
 

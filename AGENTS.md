@@ -7,69 +7,54 @@ ad60b84 (opencode/issue121-20260504145018)
 
 AI API Gateway & Protocol Converter — converts between AI provider protocols (OpenAI, Anthropic, Google, Gemini CLI) on
 Next.js with Cloudflare Workers deployment. Multi-protocol support with OAuth token management, D1 key storage, KV
-caching, download proxy with SSRF protection, and Cloudflare Analytics Engine integration.
+caching, and Cloudflare Analytics Engine integration.
 
 ## STRUCTURE
 
 ```
 ./
 ├── app/ # Next.js App Router
-│ ├── v1/ # Public API (non-standard location - NOT under app/api/) — [AGENTS.md]
-│ │ ├── chat/completions/ # OpenAI-compatible chat completions
-│ │ ├── models/ # Model listing endpoint (excludes Gemini)
-│ │ └── messages/ # Anthropic-compatible messages API
-│ ├── v1beta/ # Gemini native API endpoints (Google standard paths) — [AGENTS.md]
-│ │ └── models/ # Gemini API: models listing + generateContent/streamGenerateContent
-│ │ ├── route.ts # GET - List models
-│ │ └── [...action]/ # POST - generateContent/streamGenerateContent
-│ ├── api/
-│ │ ├── admin/ # Admin API endpoints — [AGENTS.md]
-│ │ │ ├── kv/ # KV namespace CRUD
-│ │ │ ├── tables/ # D1 table CRUD
-│ │ │ ├── download/history/ # Download history
-│ │ │ ├── analytics/ # Cloudflare Analytics Engine
-│ │ │ ├── api-test/ # HTTP request proxy + history
-│ │ │ ├── llm-keys/ # LLM API key management
-│ │ │ ├── short-url/ # Short URL management
-│ │ │ ├── github-gists/ # GitHub Gists management
-│ │ │ ├── langextract/ # Language extraction
-│ │ │ ├── domains/ # Domain management
-│ │ │ ├── email/ # Email configuration
-│ │ │ └── providers/ # Provider config + speed test + models
-│ │ ├── download/ # Download proxy (SSRF-protected)
-│ │ ├── short-url/[id]/ # Short URL redirect + QR code
-│ │ └── docker/[...path]/ # Docker proxy
-│ ├── admin/ # Admin UI (React + Ant Design) — [AGENTS.md]
-│ │ ├── kv/ # KV management UI
-│ │ ├── download/ # Download proxy management — [AGENTS.md]
-│ │ ├── chat/ # Chat test interface
-│ │ ├── api-test/ # API testing interface
-│ │ ├── analytics/ # API usage analytics (Recharts)
-│ │ ├── llm-keys/ # LLM key management UI
-│ │ ├── short-url/ # Short URL management UI
-│ │ ├── github-gists/ # GitHub Gists management UI
-│ │ ├── langextract/ # Language extraction UI
-│ │ ├── providers/ # Provider configuration UI
-│ │ ├── domains/ # Domain management UI
-│ │ ├── email/ # Email configuration UI
-│ │ ├── components/ # Shared admin components — [AGENTS.md]
-│ │ └── types/ # Shared admin types
-│ ├── components/ # React components — [AGENTS.md]
-│ │ └── Chat/ # Chat UI components
-│ ├── lib/ # Client-side utilities
-│ ├── s/[id]/ # Short URL redirect pages
-│ └── download/ # Download page
+│   ├── v1/ # Public API (non-standard location - NOT under app/api/) — [AGENTS.md]
+│   │   ├── chat/completions/ # OpenAI-compatible chat completions
+│   │   ├── models/ # Model listing endpoint (excludes Gemini)
+│   │   └── messages/ # Anthropic-compatible messages API
+│   ├── v1beta/ # Gemini native API endpoints (Google standard paths) — [AGENTS.md]
+│   │   └── models/ # Gemini API: models listing + generateContent/streamGenerateContent
+│   │       ├── route.ts # GET - List models
+│   │       └── [...action]/ # POST - generateContent/streamGenerateContent
+│   ├── api/
+│   │   └── admin/ # Admin API endpoints — [AGENTS.md]
+│   │       ├── kv/ # KV namespace CRUD
+│   │       ├── tables/ # D1 table CRUD
+│   │       ├── analytics/ # Cloudflare Analytics Engine
+│   │       ├── llm-keys/ # LLM API key management
+│   │       ├── github-gists/ # GitHub Gists management
+│   │       ├── domains/ # Domain management
+│   │       └── providers/ # Provider config + speed test + models
+│   ├── admin/ # Admin UI (React + Ant Design) — [AGENTS.md]
+│   │   ├── kv/ # KV management UI
+│   │   ├── chat/ # Chat test interface
+│   │   ├── analytics/ # API usage analytics (Recharts)
+│   │   ├── llm-keys/ # LLM key management UI
+│   │   ├── github-gists/ # GitHub Gists management UI
+│   │   ├── providers/ # Provider configuration UI
+│   │   ├── domains/ # Domain management UI
+│   │   ├── components/ # Shared admin components — [AGENTS.md]
+│   │   └── types/ # Shared admin types
+│   ├── components/ # React components — [AGENTS.md]
+│   │   └── Chat/ # Chat UI components
+│   └── lib/ # Client-side utilities
 ├── src/
-│ ├── protocols/ # Protocol adapters (OpenAI, Anthropic, Google, Gemini CLI) — [AGENTS.md]
-│ ├── managers/ # KeyManager (KV/D1 token management) — [AGENTS.md]
-│ ├── config/ # ConfigManager, provider configs — [AGENTS.md]
-│ ├── utils/ # Logger, CORS constants, SSRF protection — [AGENTS.md]
-│ ├── lib/ # Auth middleware, response helpers — [AGENTS.md]
-│ └── types/ # Protocol, request, response types — [AGENTS.md]
+│   ├── protocols/ # Protocol adapters (OpenAI, Anthropic, Google, Gemini CLI) — [AGENTS.md]
+│   ├── managers/ # KeyManager (KV/D1 token management) — [AGENTS.md]
+│   ├── config/ # ConfigManager, provider configs — [AGENTS.md]
+│   ├── utils/ # Logger, CORS constants, SSRF protection — [AGENTS.md]
+│   ├── lib/ # Auth middleware, response helpers — [AGENTS.md]
+│   └── types/ # Protocol, request, response types — [AGENTS.md]
 ├── test/ # Vitest + Cloudflare Workers pool — [AGENTS.md]
-│ ├── unit/ # Protocol + manager + lib + config + utils tests
-│ └── factories/ # Mock data generators
-├── prisma/migrations/ # D1 schema migrations (6 tables)
+│   ├── unit/ # Protocol + manager + lib + config + utils tests
+│   └── factories/ # Mock data generators
+├── prisma/migrations/ # D1 schema migrations (4 tables)
 ├── scripts/ # Utility scripts (smoke-test.mjs)
 ├── wrangler.jsonc # Cloudflare Workers config (D1, KV, secrets)
 └── vitest.config.mts # Test config with CF pool
@@ -77,46 +62,34 @@ caching, download proxy with SSRF protection, and Cloudflare Analytics Engine in
 
 ## WHERE TO LOOK
 
-| Task                          | Location                          | Notes                                                                                          |
-| ----------------------------- | --------------------------------- | ---------------------------------------------------------------------------------------------- |
-| Add new protocol adapter      | `src/protocols/`                  | Implement `ProtocolAdapter` interface, export factory                                          |
-| Add new public API route      | `app/v1/`                         | Non-standard: v1 routes are NOT under `app/api/`                                               |
-| Add Gemini native route       | `app/v1beta/`                     | Gemini native format endpoints (standard Google REST paths)                                    |
-| Add Gemini content generation | `app/v1beta/models/[...action]/`  | Catch-all for :generateContent/:streamGenerateContent                                          |
-| Add admin API endpoint        | `app/api/admin/`                  | Follow existing CRUD patterns                                                                  |
-| Modify auth logic             | `src/lib/auth.ts`                 | `authenticate()` function                                                                      |
-| Add provider config           | `src/config/default.ts`           | Add to `providers` object                                                                      |
-| Type definitions              | `src/types/`                      | All types in barrel export                                                                     |
-| Public API endpoints          | `app/v1/`                         | Chat completions, models, messages                                                             |
-| Gemini native endpoints       | `app/v1beta/`                     | Standard Google Gemini REST paths (`models/{model}:generateContent`)                           |
-| Admin UI pages                | `app/admin/`                      | React + Ant Design components                                                                  |
-| API testing UI                | `app/admin/api-test/`             | Interactive API testing interface                                                              |
-| Analytics API                 | `app/api/admin/analytics/`        | Cloudflare Analytics Engine queries                                                            |
-| Analytics UI                  | `app/admin/analytics/`            | Charts with Recharts                                                                           |
-| KV/D1 bindings                | `wrangler.jsonc`                  | PLAYBOX_KV, PLAYBOX_D1                                                                         |
-| Test factories                | `test/factories/`                 | Mock env, requests, providers                                                                  |
-| SSRF protection               | `src/utils/ssrf-protection.ts`    | `validateSafeUrl()` function                                                                   |
-| Download proxy                | `app/api/download/route.ts`       | File download with SSRF protection                                                             |
-| LLM key management            | `app/api/admin/llm-keys/`         | CRUD for LLM API keys                                                                          |
-| LLM key UI                    | `app/admin/llm-keys/`             | Key management interface                                                                       |
-| Short URL API                 | `app/api/admin/short-url/`        | Short URL CRUD + redirect                                                                      |
-| Short URL UI                  | `app/admin/short-url/`            | Short URL management                                                                           |
-| Provider config API           | `app/api/admin/providers/`        | Provider CRUD + speed test + models                                                            |
-| Provider config UI            | `app/admin/providers/`            | Provider configuration                                                                         |
-| Domain management             | `app/api/admin/domains/`          | Domain CRUD                                                                                    |
-| Domain UI                     | `app/admin/domains/`              | Domain management                                                                              |
-| Email config API              | `app/api/admin/email/`            | Email configuration                                                                            |
-| Email config UI               | `app/admin/email/`                | Email settings                                                                                 |
-| API test history              | `app/api/admin/api-test/history/` | Test execution history                                                                         |
-| D1 schema                     | `prisma/migrations/`              | 6 tables: llm_api_keys, security_keys, download_history, api_test_history, short_urls, domains |
-| GitHub Gists API              | `app/api/admin/github-gists/`     | GitHub Gists management                                                                        |
-| GitHub Gists UI               | `app/admin/github-gists/`         | Gists management interface                                                                     |
-| Language Extraction API       | `app/api/admin/langextract/`      | Language extraction endpoint                                                                   |
-| Language Extraction UI        | `app/admin/langextract/`          | Language extraction interface                                                                  |
-| Shared admin components       | `app/admin/components/`           | DataTable, SearchBar, Create/Edit/Import modals, ReferralBadge                                 |
-| Short URL redirect            | `app/api/short-url/[id]/`         | Redirect + QR code generation                                                                  |
-| Download page                 | `app/download/`                   | Download page UI                                                                               |
-| Short URL pages               | `app/s/[id]/`                     | Short URL page redirects                                                                       |
+| Task                          | Location                          | Notes                                                                |
+| ----------------------------- | --------------------------------- | -------------------------------------------------------------------- |
+| Add new protocol adapter      | `src/protocols/`                  | Implement `ProtocolAdapter` interface, export factory                |
+| Add new public API route      | `app/v1/`                         | Non-standard: v1 routes are NOT under `app/api/`                     |
+| Add Gemini native route       | `app/v1beta/`                     | Gemini native format endpoints (standard Google REST paths)          |
+| Add Gemini content generation | `app/v1beta/models/[...action]/`  | Catch-all for :generateContent/:streamGenerateContent                |
+| Add admin API endpoint        | `app/api/admin/`                  | Follow existing CRUD patterns                                        |
+| Modify auth logic             | `src/lib/auth.ts`                 | `authenticate()` function                                            |
+| Add provider config           | `src/config/default.ts`           | Add to `providers` object                                            |
+| Type definitions              | `src/types/`                      | All types in barrel export                                           |
+| Public API endpoints          | `app/v1/`                         | Chat completions, models, messages                                   |
+| Gemini native endpoints       | `app/v1beta/`                     | Standard Google Gemini REST paths (`models/{model}:generateContent`) |
+| Admin UI pages                | `app/admin/`                      | React + Ant Design components                                        |
+| Analytics API                 | `app/api/admin/analytics/`        | Cloudflare Analytics Engine queries                                  |
+| Analytics UI                  | `app/admin/analytics/`            | Charts with Recharts                                                 |
+| KV/D1 bindings                | `wrangler.jsonc`                  | PLAYBOX_KV, PLAYBOX_D1                                               |
+| Test factories                | `test/factories/`                 | Mock env, requests, providers                                        |
+| LLM key management            | `app/api/admin/llm-keys/`         | CRUD for LLM API keys                                                |
+| LLM key UI                    | `app/admin/llm-keys/`             | Key management interface                                             |
+| Provider config API           | `app/api/admin/providers/`        | Provider CRUD + speed test + models                                  |
+| Provider config UI            | `app/admin/providers/`            | Provider configuration                                               |
+| Domain management             | `app/api/admin/domains/`          | Domain CRUD                                                          |
+| Domain UI                     | `app/admin/domains/`              | Domain management                                                    |
+| API test history              | `app/api/admin/api-test/history/` | Test execution history                                               |
+| D1 schema                     | `prisma/migrations/`              | 4 tables: llm_api_keys, security_keys, providers, domains            |
+| GitHub Gists API              | `app/api/admin/github-gists/`     | GitHub Gists management                                              |
+| GitHub Gists UI               | `app/admin/github-gists/`         | Gists management interface                                           |
+| Shared admin components       | `app/admin/components/`           | DataTable, SearchBar, Create/Edit/Import modals, ReferralBadge       |
 
 ## CODE MAP
 
@@ -271,10 +244,8 @@ npm test # Run Vitest tests
 - **ESLint**: Uses `eslint.config.mjs` with TypeScript-ESLint, React, Prettier (not enforced in CI)
 - **Build entry**: `.open-next/worker.js` (OpenNext output), not `src/index.ts`
 - **Analytics Engine**: `PLAYBOX_EVENTS` binding for Cloudflare Analytics Engine
-- **D1 tables**: 6 tables — llm_api_keys, security_keys, download_history, api_test_history, short_urls, domains
-- **Short URL**: Public redirect at `/s/{id}` and `/api/short-url/{id}`, QR code at `/api/short-url/{id}/qr`
+- **D1 tables**: 4 tables — llm_api_keys, security_keys, providers, domains
 - **GitHub Gists**: Management UI at `/admin/github-gists`, API at `/api/admin/github-gists/`
-- **LangExtract**: Language extraction at `/admin/langextract` and `/api/admin/langextract/`
 
 <!-- code-review-graph MCP tools -->
 

@@ -5,14 +5,9 @@ const ADMIN_PAGES = [
   { path: '/admin/llm-keys', menuTitle: 'API Keys', header: 'API Key Management' },
   { path: '/admin/kv', menuTitle: 'KV Storage', header: 'KV Storage Management' },
   { path: '/admin/providers', menuTitle: 'Providers', header: 'Provider Models' },
-  { path: '/admin/download', menuTitle: 'Download', header: 'File Download Proxy' },
   { path: '/admin/chat', menuTitle: 'Chat Test', header: 'Chat Test' },
-  { path: '/admin/api-test', menuTitle: 'API Test', header: 'API Test' },
   { path: '/admin/analytics', menuTitle: 'Analytics', header: 'API Analytics' },
-  { path: '/admin/email', menuTitle: 'Email Test', header: 'Email Test' },
   { path: '/admin/domains', menuTitle: 'Domains', header: 'Domain Query' },
-  { path: '/admin/langextract', menuTitle: 'LangExtract', header: 'LangExtract' },
-  { path: '/admin/short-url', menuTitle: 'Short URL', header: 'Short URL' },
   { path: '/admin/github-gists', menuTitle: 'GitHub Gists', header: 'GitHub Gists' },
 ] as const;
 
@@ -93,7 +88,7 @@ test.describe('Admin Sidebar', () => {
     await page.waitForLoadState('networkidle');
   });
 
-  test('侧边栏显示所有 14 个菜单项', async ({ page }) => {
+  test('侧边栏显示所有 8 个菜单项', async ({ page }) => {
     for (const { menuTitle } of ADMIN_PAGES) {
       await expect(page.locator(`.ant-menu-item:has-text("${menuTitle}")`).first()).toBeVisible();
     }
@@ -161,28 +156,11 @@ test.describe('Admin 页面直接导航渲染', () => {
     await expect(page.locator('.ant-layout-content')).toBeVisible();
   });
 
-  test('Download 页面', async ({ page }) => {
-    await page.goto('/admin/download', { waitUntil: 'domcontentloaded' });
-    await page.waitForTimeout(2000);
-    await expect(page.locator('h4').filter({ hasText: 'File Download Proxy' })).toBeVisible();
-    await expect(page.locator('text=Quick Download')).toBeVisible();
-    await expect(page.locator('input[placeholder*="Enter URL"]')).toBeVisible();
-    await expect(page.locator('button:has-text("Download")')).toBeVisible();
-  });
-
   test('Chat Test 页面', async ({ page }) => {
     await page.goto('/admin/chat', { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(2000);
     await expect(page.locator('h4').filter({ hasText: 'Chat Test' })).toBeVisible();
     await expect(page.locator('.ant-layout-content')).toBeVisible();
-  });
-
-  test('API Test 页面', async ({ page }) => {
-    await page.goto('/admin/api-test', { waitUntil: 'domcontentloaded' });
-    await page.waitForTimeout(2000);
-    await expect(page.locator('h4').filter({ hasText: 'API Test' })).toBeVisible();
-    await expect(page.locator('text=Request').first()).toBeVisible();
-    await expect(page.locator('text=Response').first()).toBeVisible();
   });
 
   test('Analytics 页面', async ({ page }) => {
@@ -193,13 +171,6 @@ test.describe('Admin 页面直接导航渲染', () => {
     await expect(page.locator('text=Requests by Model').first()).toBeVisible();
   });
 
-  test('Email Test 页面', async ({ page }) => {
-    await page.goto('/admin/email', { waitUntil: 'domcontentloaded' });
-    await page.waitForTimeout(2000);
-    await expect(page.locator('h4').filter({ hasText: 'Email Test' })).toBeVisible();
-    await expect(page.locator('.ant-layout-content')).toBeVisible();
-  });
-
   test('Domains 页面', async ({ page }) => {
     await page.goto('/admin/domains', { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(2000);
@@ -207,20 +178,6 @@ test.describe('Admin 页面直接导航渲染', () => {
     // Table should render with mock domain data
     await expect(page.locator('.ant-table')).toBeVisible();
     await expect(page.getByText('example.com', { exact: true })).toBeVisible();
-  });
-
-  test('LangExtract 页面', async ({ page }) => {
-    await page.goto('/admin/langextract', { waitUntil: 'domcontentloaded' });
-    await page.waitForTimeout(2000);
-    await expect(page.locator('h4').filter({ hasText: 'LangExtract' })).toBeVisible();
-    await expect(page.locator('.ant-layout-content')).toBeVisible();
-  });
-
-  test('Short URL 页面', async ({ page }) => {
-    await page.goto('/admin/short-url', { waitUntil: 'domcontentloaded' });
-    await page.waitForTimeout(2000);
-    await expect(page.locator('h4').filter({ hasText: 'Short URL' })).toBeVisible();
-    await expect(page.locator('text=Create Short URL').first()).toBeVisible();
   });
 
   test('GitHub Gists 页面', async ({ page }) => {
@@ -234,44 +191,6 @@ test.describe('Admin 页面直接导航渲染', () => {
 test.describe('Admin 页面交互', () => {
   test.beforeEach(async ({ page }) => {
     await mockAdminAPIs(page);
-  });
-
-  test('Short URL 创建表单 - 输入 URL 后可提交', async ({ page }) => {
-    await page.goto('/admin/short-url');
-    await page.waitForTimeout(2000);
-
-    const urlInput = page.locator('input').first();
-    await urlInput.fill('https://example.com');
-
-    const createBtn = page
-      .locator('button')
-      .filter({ hasText: /Create|Shorten/ })
-      .first();
-    if (await createBtn.isVisible()) {
-      await createBtn.click();
-      await page.waitForTimeout(1000);
-      await expect(page.locator('h4').filter({ hasText: 'Short URL' })).toBeVisible();
-    }
-  });
-
-  test('Download 页面 - URL 输入验证', async ({ page }) => {
-    await page.goto('/admin/download');
-    await page.waitForTimeout(2000);
-
-    const urlInput = page.locator('input[placeholder*="Enter URL"]');
-    await expect(urlInput).toBeVisible();
-    await urlInput.fill('invalid-url');
-    await page.locator('button:has-text("Download")').click();
-    // Should show some feedback (message or error alert)
-    await expect(page.locator('.ant-message, .ant-alert').first()).toBeVisible({ timeout: 5000 });
-  });
-
-  test('API Test 页面 - URL 输入框存在', async ({ page }) => {
-    await page.goto('/admin/api-test');
-    await page.waitForTimeout(2000);
-
-    const urlInput = page.locator('input[placeholder*="url" i], input[type="url"]').first();
-    await expect(urlInput).toBeVisible();
   });
 
   test('页面间导航 - 通过侧边栏菜单', async ({ page }) => {
