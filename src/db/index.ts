@@ -34,4 +34,5 @@ export type {
 
 // Adapters
 export { D1Adapter, d1Adapter } from './d1-adapter';
+export { D1RestAdapter, d1RestAdapter, type D1RestOptions } from './d1-rest-adapter';
 export { createSqlClient, type SqlClientOptions } from './factory';
