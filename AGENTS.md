@@ -69,7 +69,7 @@ Next.js with Cloudflare Workers deployment. Multi-protocol support with OAuth to
 | Public API endpoints          | `app/v1/`                         | Chat completions, models, messages                                   |
 | Gemini native endpoints       | `app/v1beta/`                     | Standard Google Gemini REST paths (`models/{model}:generateContent`) |
 | Admin UI pages                | `app/admin/`                      | React + Ant Design components                                        |
-| KV/D1 bindings                | `wrangler.jsonc`                  | PLAYBOX_KV, PLAYBOX_D1                                               |
+| D1 binding                | `wrangler.jsonc`                  | PLAYBOX_D1                                               |
 | Test factories                | `test/factories/`                 | Mock env, requests, providers                                        |
 | LLM key management            | `app/api/admin/llm-keys/`         | CRUD for LLM API keys                                                |
 | LLM key UI                    | `app/admin/llm-keys/`             | Key management interface                                             |
@@ -201,7 +201,7 @@ Next.js with Cloudflare Workers deployment. Multi-protocol support with OAuth to
 ## UNIQUE STYLES
 
 - **Multi-protocol**: Supports OpenAI, Anthropic, Google, Gemini CLI formats
-- **KV caching**: Access tokens cached in PLAYBOX_KV with automatic refresh
+
 - **CORS headers**: All responses include CORS headers from `utils/constants.ts`
 - **OpenNext for Cloudflare**: Uses `@opennextjs/cloudflare` for deployment (NOT `@cloudflare/next-on-pages`)
 - **Dynamic rendering**: API routes use `export const dynamic = 'force-dynamic'`

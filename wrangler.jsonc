@@ -45,12 +45,7 @@
       "database_id": "53a52a57-8375-4979-b764-b9277b5b1cb7"
     }
   ],
-  "kv_namespaces": [
-    {
-      "id": "85fe9a9b4cd54015b78dcba0c5486279",
-      "binding": "PLAYBOX_KV"
-    }
-  ],
+  
   /**
    * Environment Variables
    * https://developers.cloudflare.com/workers/wrangler/configuration/#environment-variables

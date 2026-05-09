@@ -90,7 +90,6 @@ describe('OpenAI Protocol Adapter', () => {
     const mockCtx = createMockExecutionContext();
     const mockProvider = createMockProviderConfig({ type: 'openai', key: 'test-provider' });
 
-    mockEnv.PLAYBOX_KV.get = vi.fn().mockResolvedValue(['key-1', 'key-2']);
     mockEnv.PLAYBOX_D1 = {
       prepare: vi.fn().mockReturnValue({
         bind: vi.fn().mockReturnThis(),

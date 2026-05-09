@@ -28,8 +28,8 @@ describe('Cloudflare Context', () => {
 
       const context = createCloudflareContext(executionCtx, env);
 
-      const kv = context.getBinding('PLAYBOX_KV');
-      expect(kv).toBe(env.PLAYBOX_KV);
+      const d1 = context.getBinding('PLAYBOX_D1');
+      expect(d1).toBe(env.PLAYBOX_D1);
     });
 
     it('should return undefined for non-existent binding', () => {
@@ -48,10 +48,10 @@ describe('Cloudflare Context', () => {
 
       const context = createCloudflareContext(executionCtx, env);
 
-      const kv = context.getBinding<{ get: Function; put: Function }>('PLAYBOX_KV');
-      expect(kv).toBeDefined();
-      expect(typeof kv!.get).toBe('function');
-      expect(typeof kv!.put).toBe('function');
+      const d1 = context.getBinding<{ prepare: Function; batch: Function }>('PLAYBOX_D1');
+      expect(d1).toBeDefined();
+      expect(typeof d1!.prepare).toBe('function');
+      expect(typeof d1!.batch).toBe('function');
     });
 
     it('should have env property accessible multiple times', () => {
@@ -94,7 +94,7 @@ describe('Cloudflare Context', () => {
 
       expect(typeof context.env).toBe('object');
       expect(context.env).toHaveProperty('AUTH_TOKEN');
-      expect(context.env).toHaveProperty('PLAYBOX_KV');
+      expect(context.env).toHaveProperty('PLAYBOX_D1');
     });
   });
 });

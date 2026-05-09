@@ -44,7 +44,7 @@ api/admin/
 ## CONVENTIONS
 
 - **Dynamic segments**: `[namespace]`, `[key]`, `[table]`, `[rowid]`
-- **Context**: `getCloudflareContext()` from `@opennextjs/cloudflare` for Cloudflare bindings (KV, D1)
+- **Context**: `getCloudflareContext()` from `@opennextjs/cloudflare` for Cloudflare bindings (D1)
 - **Validation**: `validateTable()` for D1, `escapeColumnName()` prevents SQL injection
 - **Pagination**: Default 20-50 items, configurable via `limit`/`page`/`pageSize`
 - **Response helpers**: Use `createJsonResponse()`, `createInternalErrorResponse()`, `createNotFoundResponse()`

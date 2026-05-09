@@ -32,14 +32,14 @@ test/
 | Add config test     | `unit/config/`       | Config resolution tests                     |
 | Add utils test      | `unit/utils/`        | Logger, SSE, SSRF, constants                |
 | Mock data factories | `factories/index.ts` | `createMockEnv`, `createMockProviderConfig` |
-| Global setup        | `setup.ts`           | KV/D1 mocks, fetch interception             |
+| Global setup        | `setup.ts`           | D1 mock, fetch interception             |
 | Coverage thresholds | `vitest.config.mts`  | 70% branches, 85% functions, 80% lines      |
 
 ## CONVENTIONS
 
 - **Cloudflare Workers pool**: Uses `@cloudflare/vitest-pool-workers`
 - **Factory pattern**: All test data via `test/factories/` with overrides
-- **Global mocks**: KV/D1 pre-mocked in `setup.ts`, not per-test
+- **Global mocks**: D1 pre-mocked in `setup.ts`, not per-test
 
 ## ANTI-PATTERNS
 

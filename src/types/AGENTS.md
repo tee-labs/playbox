@@ -43,4 +43,4 @@ types/
 ## NOTES
 
 - **Import pattern**: `import { SomeType } from '@/types'`
-- **Env bindings**: PLAYBOX*KV, PLAYBOX_D1, AUTH_TOKEN, GEMINI_CLI*\*
+- **Env bindings**: PLAYBOX_D1, AUTH_TOKEN, GEMINI_CLI_*

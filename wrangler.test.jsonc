@@ -17,12 +17,7 @@
       "database_name": "playbox-test"
     }
   ],
-  "kv_namespaces": [
-    {
-      "id": "85fe9a9b4cd54015b78dcba0c5486279",
-      "binding": "PLAYBOX_KV"
-    }
-  ],
+  
   "analytics_engine_datasets": [
     {
       "binding": "PLAYBOX_EVENTS",
