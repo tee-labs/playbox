@@ -22,7 +22,7 @@ function d1ToStatement(stmt: D1PreparedStatement): BoundStatement {
     all: () => stmt.all() as Promise<QueryResults>,
     first: <T extends QueryResultRow = QueryResultRow>() =>
       stmt.first() as Promise<QueryFirstResult<T>>,
-    run: () => stmt.run() as Promise<RunResult>,
+    run: () => stmt.run() as unknown as Promise<RunResult>,
   };
 }
 
@@ -52,11 +52,19 @@ export class D1Adapter implements SqlClient {
   }
 
   async dump(): Promise<string> {
-    return this.db.dump();
+    const buffer = await this.db.dump();
+    return new TextDecoder().decode(buffer);
   }
 
   async exec(sql: string): Promise<RunResult> {
-    return this.db.exec(sql) as Promise<RunResult>;
+    const result = await this.db.exec(sql);
+    return {
+      results: [],
+      success: true,
+      meta: {
+        changes: result.count,
+      },
+    };
   }
 }
 
