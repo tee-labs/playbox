@@ -59,11 +59,19 @@ function createCloudflareContext(): PlatformContext {
   return {
     getDatabase: () => {
       try {
+        console.log('[Cloudflare] Attempting to get D1 database...');
         const raw = getCloudflareContext();
+        console.log('[Cloudflare] getCloudflareContext succeeded');
         const env = raw.env as { PLAYBOX_D1?: unknown };
-        if (!env.PLAYBOX_D1) return null;
+        console.log('[Cloudflare] env keys:', Object.keys(env));
+        if (!env.PLAYBOX_D1) {
+          console.log('[Cloudflare] PLAYBOX_D1 not found in env');
+          return null;
+        }
+        console.log('[Cloudflare] PLAYBOX_D1 found, creating client');
         return createSqlClient({ d1: env.PLAYBOX_D1 as Parameters<typeof createSqlClient>[0]['d1'] });
-      } catch {
+      } catch (error) {
+        console.error('[Cloudflare] Failed to get database:', error);
         return null;
       }
     },
