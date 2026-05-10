@@ -5,7 +5,7 @@ import { getConfig, resolveProvider } from '@/config';
 import { ProtocolFactory } from '@/protocols';
 import { CORS_HEADERS } from '@/utils/constants';
 import { createLogger } from '@/utils/logger';
-import { getTypedContext } from '@/lib/cloudflare-context';
+import { getPlatformDb } from '@/platforms';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,11 +19,14 @@ interface RerankBody {
 export async function POST(request: NextRequest) {
   const logger = createLogger();
 
-  const { env } = getTypedContext();
-
-  const authResult = await authenticate(request, env);
+  const authResult = await authenticate(request);
   if (!authResult) {
     return createUnauthorizedResponse();
+  }
+
+  const db = getPlatformDb();
+  if (!db) {
+    return createInternalErrorResponse('D1 database not configured');
   }
 
   try {
@@ -53,9 +56,9 @@ export async function POST(request: NextRequest) {
     let lastResponse: Response | undefined;
 
     for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-      const upstreamApiKey = await upstreamProtocol.getApiKey(env, provider);
+      const upstreamApiKey = await upstreamProtocol.getApiKey(db, provider);
       const fetchUrl = await upstreamProtocol.getEndpoint(provider, realModel, false, upstreamApiKey, false, true);
-      const fetchHeaders = await upstreamProtocol.getHeaders(provider, env, upstreamApiKey);
+      const fetchHeaders = await upstreamProtocol.getHeaders(provider, db, upstreamApiKey);
       lastResponse = await fetch(fetchUrl, {
         method: 'POST',
         headers: fetchHeaders,

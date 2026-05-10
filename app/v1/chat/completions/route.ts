@@ -1,13 +1,13 @@
 import { NextRequest } from 'next/server';
 import { authenticate } from '@/lib/auth';
-import { createUnauthorizedResponse } from '@/lib/response-helpers';
+import { createUnauthorizedResponse, createJsonResponse } from '@/lib/response-helpers';
 import { getConfig, resolveProvider } from '@/config';
 import { ProtocolFactory } from '@/protocols';
-import type { ProtocolBody } from '@/types/protocol';
+import type { ProtocolBody } from '@/types';
 
 import { CORS_HEADERS } from '@/utils/constants';
 import { createLogger } from '@/utils/logger';
-import { getTypedContext } from '@/lib/cloudflare-context';
+import { getPlatformDb } from '@/platforms';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,14 +21,14 @@ interface ChatBody {
 export async function POST(request: NextRequest) {
   const logger = createLogger();
 
-  const { env } = getTypedContext();
-
-  const authResult = await authenticate(request, env);
+  const authResult = await authenticate(request);
   if (!authResult) {
     return createUnauthorizedResponse();
   }
 
   try {
+    const db = getPlatformDb();
+
     const rawBody = (await request.json()) as ChatBody;
     const rawBodyObj = rawBody as unknown as Record<string, unknown>;
     delete rawBodyObj.store;
@@ -37,32 +37,14 @@ export async function POST(request: NextRequest) {
     const isStream = rawBody.stream === true;
 
     const config = await getConfig();
-    const { name: providerName, provider, realModel } = resolveProvider(config, requestedModel, 'openai');
-    if (!provider) {
-      throw new Error(`No provider found for model: ${requestedModel}`);
-    }
+    const { provider, realModel } = resolveProvider(config, requestedModel, 'openai');
 
-    if (provider.family !== 'openai') {
-      throw new Error(
-        `Chat completions endpoint only supports 'openai' family providers. Got: ${provider.family} (provider: ${providerName})`
-      );
-    }
+    const upstreamProtocol = ProtocolFactory.get('openai');
 
-    logger.info('Request routed', { model: requestedModel, realModel, isStream, providerName, providerType: provider.type });
+    const upstreamRequest = upstreamProtocol.toStandardRequest(rawBodyObj as ProtocolBody);
 
-    const clientProtocol = ProtocolFactory.get('openai');
-    const upstreamProtocol = ProtocolFactory.get(provider.type);
-
-    const standardRequest = clientProtocol.toStandardRequest(rawBody);
-    const upstreamRequest = upstreamProtocol.fromStandardRequest(standardRequest);
-
-    // Replace model name with resolved model (handles aliases)
-    upstreamRequest.model = realModel;
-
-    // Ensure upstream returns usage in streaming responses
-    // (OpenAI spec requires stream_options.include_usage for usage in SSE chunks)
-    if (isStream) {
-      upstreamRequest.stream_options = { include_usage: true };
+    if (!db) {
+      return createJsonResponse({ error: 'D1 database not configured' }, 500);
     }
 
     const MAX_ATTEMPTS = upstreamProtocol.getAttempt();
@@ -71,9 +53,9 @@ export async function POST(request: NextRequest) {
     let fetchUrl = '';
     let fetchHeaders: Record<string, string> = {};
     for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-      const upstreamApiKey = await upstreamProtocol.getApiKey(env, provider);
+      const upstreamApiKey = await upstreamProtocol.getApiKey(db, provider);
       fetchUrl = await upstreamProtocol.getEndpoint(provider, realModel, isStream, upstreamApiKey);
-      fetchHeaders = await upstreamProtocol.getHeaders(provider, env, upstreamApiKey);
+      fetchHeaders = await upstreamProtocol.getHeaders(provider, db, upstreamApiKey);
       lastResponse = await fetch(fetchUrl, {
         method: 'POST',
         headers: fetchHeaders,
@@ -88,38 +70,78 @@ export async function POST(request: NextRequest) {
     }
 
     const resHeaders = {
-      'Access-Control-Allow-Origin': '*',
-      'Content-Type': isStream ? 'text/event-stream' : 'application/json',
+      ...CORS_HEADERS,
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': '*',
     };
 
-    if (isStream && lastResponse) {
-      let stream = lastResponse.body;
-      if (!stream) {
-        throw new Error('Response body is null');
+    if (isStream) {
+      // Handle streaming response
+      const upstreamStream = lastResponse?.body;
+      if (!upstreamStream) {
+        return new Response('Upstream stream not available', { status: 502, headers: resHeaders });
       }
 
-      stream = stream.pipeThrough(upstreamProtocol.createToStandardStream(realModel));
-      stream = stream.pipeThrough(clientProtocol.createFromStandardStream());
+      const body = new ReadableStream({
+        async start(controller) {
+          const reader = upstreamStream.getReader();
 
-      return new Response(stream, {
-        headers: { ...resHeaders, 'Cache-Control': 'no-cache', 'Connection': 'keep-alive' },
+          try {
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              controller.enqueue(value);
+            }
+          } catch (error) {
+            logger.error('Stream reading error', { error });
+          } finally {
+            controller.close();
+          }
+        },
       });
-    } else if (lastResponse) {
-      const upstreamJson = await lastResponse.json();
 
-      const standardResponse = upstreamProtocol.toStandardResponse(upstreamJson as ProtocolBody, realModel);
+      return new Response(body, {
+        headers: {
+          ...resHeaders,
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+          'Connection': 'keep-alive',
+        },
+      });
+    } else {
+      if (!lastResponse?.ok) {
+        const errorText = await lastResponse?.text();
+        logger.error('Upstream error response', { status: lastResponse?.status, body: errorText });
+        return new Response(JSON.stringify({ error: 'Upstream provider error', details: errorText }), {
+          status: lastResponse?.status || 500,
+          headers: resHeaders,
+        });
+      }
 
-      const clientResponse = clientProtocol.fromStandardResponse(standardResponse);
+      const upstreamData = await lastResponse?.json() as Record<string, unknown>;
+      const response = upstreamProtocol.fromStandardResponse(upstreamData);
 
-      return new Response(JSON.stringify(clientResponse), { headers: resHeaders });
+      return new Response(JSON.stringify(response), {
+        status: 200,
+        headers: resHeaders,
+      });
     }
-
-    throw new Error('No response from upstream');
-  } catch (err) {
-    logger.error('Internal Server Error', { message: (err as Error).message, stack: (err as Error).stack });
-    return new Response(JSON.stringify({ error: { message: (err as Error).message } }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json', ...CORS_HEADERS },
-    });
+  } catch (error) {
+    logger.error('Error in POST /v1/chat/completions', { error });
+    return createJsonResponse(
+      { error: { message: 'Internal Server Error', type: 'internal_error' } },
+      500
+    );
   }
+}
+
+export async function OPTIONS() {
+  return new Response(null, {
+    status: 204,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': '*',
+    },
+  });
 }

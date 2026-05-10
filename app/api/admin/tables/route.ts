@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { getTypedContext } from '@/lib/cloudflare-context';
+import { getPlatformDb } from '@/platforms';
 import { createJsonResponse, createInternalErrorResponse } from '@/lib/response-helpers';
 
 export const dynamic = 'force-dynamic';
@@ -30,9 +30,8 @@ interface TableSchema {
  */
 export async function GET(_request: NextRequest) {
   try {
-    // Get Cloudflare bindings from global context
-    const { env } = getTypedContext();
-    const db = env.PLAYBOX_D1;
+    // Get database via platform abstraction (supports Cloudflare Workers and Vercel D1 REST API)
+    const db = getPlatformDb();
 
     if (!db) {
       return createJsonResponse({ error: 'D1 database not configured' }, 500);
@@ -50,6 +49,7 @@ export async function GET(_request: NextRequest) {
       ORDER BY name
     `
       )
+      .bind()
       .all();
 
     const tables = tablesResult.results as unknown as TableInfo[];
@@ -58,7 +58,7 @@ export async function GET(_request: NextRequest) {
     const tableSchemas: TableSchema[] = [];
 
     for (const table of tables) {
-      const columnsResult = await db.prepare(`PRAGMA table_info(${table.name})`).all();
+      const columnsResult = await db.prepare(`PRAGMA table_info(${table.name})`).bind().all();
       tableSchemas.push({
         name: table.name,
         sql: table.sql,

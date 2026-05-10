@@ -1,7 +1,6 @@
 import { NextRequest } from 'next/server';
-import { getTypedContext } from '@/lib/cloudflare-context';
 import { authenticate } from '@/lib/auth';
-import { createJsonResponse, createUnauthorizedResponse } from '@/lib/response-helpers';
+import { createJsonResponse } from '@/lib/response-helpers';
 import { getConfig, type ProviderConfig } from '@/config';
 
 export const dynamic = 'force-dynamic';
@@ -23,10 +22,17 @@ interface GeminiModelsResponse {
 }
 
 export async function GET(request: NextRequest) {
-  const { env } = getTypedContext();
-
-  if (!(await authenticate(request, env))) {
-    return createUnauthorizedResponse();
+  // Authenticate using platform abstraction (supports Cloudflare Workers and Vercel)
+  if (!(await authenticate(request))) {
+    return createJsonResponse(
+      {
+        error: {
+          message: 'Unauthorized',
+          type: 'unauthorized',
+        },
+      },
+      401
+    );
   }
 
   try {

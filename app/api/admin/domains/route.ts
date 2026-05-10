@@ -1,30 +1,30 @@
 import { NextRequest } from 'next/server';
-import { getTypedContext } from '@/lib/cloudflare-context';
+import { getPlatformDb } from '@/platforms';
 import { createJsonResponse, createInternalErrorResponse } from '@/lib/response-helpers';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(_request: NextRequest) {
   try {
-    const { env } = getTypedContext();
-    const db = env.PLAYBOX_D1;
+    const db = getPlatformDb();
 
     if (!db) {
       return createJsonResponse({ error: 'D1 database not configured' }, 500);
     }
 
-    interface SecurityKeyRow {
+    interface SecurityKeyRow extends Record<string, unknown> {
       content: string;
     }
     const keyResult = await db
       .prepare(`SELECT content FROM security_keys WHERE type = 'API_KEY' AND provider = 'DIGITAL' LIMIT 1`)
+      .bind()
       .first<SecurityKeyRow>();
 
     if (!keyResult) {
       return createJsonResponse({ error: 'DIGITAL API key not found' }, 404);
     }
 
-    const apiKey = keyResult.content;
+    const apiKey = keyResult.results?.content;
 
     const response = await fetch('https://domain-api.digitalplat.org/api/v1/domains', {
       headers: {

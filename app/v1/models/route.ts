@@ -1,9 +1,8 @@
 import { NextRequest } from 'next/server';
 import { authenticate } from '@/lib/auth';
-import { createJsonResponse, createUnauthorizedResponse } from '@/lib/response-helpers';
+import { createJsonResponse } from '@/lib/response-helpers';
 import { getConfig } from '@/config';
 import type { ProviderConfig } from '@/types';
-import { getTypedContext } from '@/lib/cloudflare-context';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,10 +14,16 @@ interface ModelInfo {
 }
 
 export async function GET(request: NextRequest) {
-  const { env } = getTypedContext();
-
-  if (!(await authenticate(request, env))) {
-    return createUnauthorizedResponse();
+  if (!(await authenticate(request))) {
+    return createJsonResponse(
+      {
+        error: {
+          message: 'Incorrect API key provided.',
+          type: 'invalid_request_error',
+        },
+      },
+      401
+    );
   }
 
   try {

@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
-import { getTypedContext } from '@/lib/cloudflare-context';
+import { getPlatformDb } from '@/platforms';
 import { createJsonResponse, createInternalErrorResponse, createNotFoundResponse } from '@/lib/response-helpers';
-import type { D1Database, D1Statement } from '@/types';
+import type { BoundStatement, SqlClient } from '@/db/types';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,7 +11,7 @@ interface ColumnInfo {
   pk: number;
 }
 
-async function validateTable(db: D1Database, tableName: string): Promise<ColumnInfo[] | null> {
+async function validateTable(db: SqlClient, tableName: string): Promise<ColumnInfo[] | null> {
   const tablesResult = await db
     .prepare(
       `
@@ -25,9 +25,9 @@ async function validateTable(db: D1Database, tableName: string): Promise<ColumnI
     .bind(tableName)
     .first();
 
-  if (!tablesResult) return null;
+  if (!tablesResult || !tablesResult.results) return null;
 
-  const columnsResult = await db.prepare(`PRAGMA table_info(${tableName})`).all();
+  const columnsResult = await db.prepare(`PRAGMA table_info(${tableName})`).bind().all();
   return columnsResult.results as unknown as ColumnInfo[];
 }
 
@@ -59,8 +59,7 @@ function parseCSV(content: string): Record<string, unknown>[] {
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ table: string }> }) {
   try {
-    const { env } = getTypedContext();
-    const db = env.PLAYBOX_D1;
+    const db = getPlatformDb();
 
     if (!db) {
       return createJsonResponse({ error: 'D1 database not configured' }, 500);
@@ -115,7 +114,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         return createJsonResponse({ error: 'No data to import' }, 400);
       }
 
-      const statements: D1Statement[] = [];
+      const statements: BoundStatement[] = [];
       let successCount = 0;
       let errorCount = 0;
 
@@ -150,16 +149,15 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       }
 
       if (statements.length > 0) {
-        // Check if using native D1 batch (Cloudflare Workers) or REST batch
+        // Use batch if available (Cloudflare D1 native)
         if (typeof db.batch === 'function') {
-          await db.batch(statements);
-        } else if (typeof db.executeBatch === 'function') {
-          // D1 REST adapter: convert D1Statement back to SQL strings
-          const sqlStatements = statements.map((stmt) => {
-            // Access the raw SQL from the statement
-            return (stmt as unknown as { sql?: string }).sql ?? '';
-          });
-          await db.executeBatch(sqlStatements);
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          await db.batch(statements as any);
+        } else {
+          // Fallback: execute statements individually
+          for (const stmt of statements) {
+            await stmt.run();
+          }
         }
       }
 

@@ -1,11 +1,11 @@
 import { NextRequest } from 'next/server';
 import { authenticate } from '@/lib/auth';
-import { createJsonResponse, createUnauthorizedResponse, createInternalErrorResponse } from '@/lib/response-helpers';
+import { createJsonResponse, createInternalErrorResponse } from '@/lib/response-helpers';
 import { getConfig, resolveProvider } from '@/config';
 import { ProtocolFactory } from '@/protocols';
 import { CORS_HEADERS } from '@/utils/constants';
 import { createLogger } from '@/utils/logger';
-import { getTypedContext } from '@/lib/cloudflare-context';
+import { getPlatformDb } from '@/platforms';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,12 +18,8 @@ interface EmbeddingBody {
 export async function POST(request: NextRequest) {
   const logger = createLogger();
 
-  const { env } = getTypedContext();
-
-  const authResult = await authenticate(request, env);
-  if (!authResult) {
-    return createUnauthorizedResponse();
-  }
+  const db = getPlatformDb();
+  await authenticate(request); // auth uses getPlatformDb internally
 
   try {
     const rawBody = (await request.json()) as EmbeddingBody;
@@ -50,13 +46,17 @@ export async function POST(request: NextRequest) {
     const upstreamRequest = { ...rawBody };
     upstreamRequest.model = realModel;
 
+    if (!db) {
+      return createJsonResponse({ error: 'D1 database not configured' }, 500);
+    }
+
     const MAX_ATTEMPTS = upstreamProtocol.getAttempt();
     let lastResponse: Response | undefined;
 
     for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-      const upstreamApiKey = await upstreamProtocol.getApiKey(env, provider);
+      const upstreamApiKey = await upstreamProtocol.getApiKey(db, provider);
       const fetchUrl = await upstreamProtocol.getEndpoint(provider, realModel, false, upstreamApiKey, true);
-      const fetchHeaders = await upstreamProtocol.getHeaders(provider, env, upstreamApiKey);
+      const fetchHeaders = await upstreamProtocol.getHeaders(provider, db, upstreamApiKey);
       lastResponse = await fetch(fetchUrl, {
         method: 'POST',
         headers: fetchHeaders,

@@ -1,13 +1,12 @@
 import { NextRequest } from 'next/server';
-import { getTypedContext } from '@/lib/cloudflare-context';
+import { getPlatformDb } from '@/platforms';
 import { createJsonResponse, createNotFoundResponse, createInternalErrorResponse } from '@/lib/response-helpers';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const { env } = getTypedContext();
-    const db = env.PLAYBOX_D1;
+    const db = getPlatformDb();
 
     if (!db) {
       return createJsonResponse({ error: 'D1 database not configured' }, 500);
@@ -26,19 +25,19 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       .bind(id)
       .first();
 
-    if (!result) {
+    if (!result || !result.results) {
       return createNotFoundResponse('API key not found');
     }
 
     return createJsonResponse({
       success: true,
       key: {
-        id: result.id,
-        name: result.name,
-        expires_at: result.expires_at,
-        created_at: result.created_at,
-        is_active: result.is_active === 1,
-        last_used_at: result.last_used_at,
+        id: result.results.id,
+        name: result.results.name,
+        expires_at: result.results.expires_at,
+        created_at: result.results.created_at,
+        is_active: result.results.is_active === 1,
+        last_used_at: result.results.last_used_at,
       },
     });
   } catch (error) {
@@ -49,8 +48,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const { env } = getTypedContext();
-    const db = env.PLAYBOX_D1;
+    const db = getPlatformDb();
 
     if (!db) {
       return createJsonResponse({ error: 'D1 database not configured' }, 500);
@@ -59,7 +57,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     const { id } = await params;
 
     const existing = await db.prepare('SELECT id FROM llm_api_keys WHERE id = ?').bind(id).first();
-    if (!existing) {
+    if (!existing || !existing.results) {
       return createNotFoundResponse('API key not found');
     }
 

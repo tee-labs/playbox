@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
-import { getTypedContext } from '@/lib/cloudflare-context';
+import { getPlatformDb } from '@/platforms';
 import { createJsonResponse, createInternalErrorResponse, createNotFoundResponse } from '@/lib/response-helpers';
-import type { D1Database } from '@/types';
+import type { SqlClient } from '@/db/types';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,7 +14,7 @@ interface ColumnInfo {
   pk: number;
 }
 
-async function validateTable(db: D1Database, tableName: string): Promise<ColumnInfo[] | null> {
+async function validateTable(db: SqlClient, tableName: string): Promise<ColumnInfo[] | null> {
   const tablesResult = await db
     .prepare(
       `
@@ -28,9 +28,9 @@ async function validateTable(db: D1Database, tableName: string): Promise<ColumnI
     .bind(tableName)
     .first();
 
-  if (!tablesResult) return null;
+  if (!tablesResult || !tablesResult.results) return null;
 
-  const columnsResult = await db.prepare(`PRAGMA table_info(${tableName})`).all();
+  const columnsResult = await db.prepare(`PRAGMA table_info(${tableName})`).bind().all();
   return columnsResult.results as unknown as ColumnInfo[];
 }
 
@@ -43,8 +43,7 @@ function escapeColumnName(name: string): string {
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ table: string }> }) {
   try {
-    const { env } = getTypedContext();
-    const db = env.PLAYBOX_D1;
+    const db = getPlatformDb();
 
     if (!db) {
       return createJsonResponse({ error: 'D1 database not configured' }, 500);
@@ -95,7 +94,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       .bind(...bindParams)
       .first();
 
-    const total = (countResult as { total: number } | null)?.total || 0;
+    const total = (countResult?.results as { total: number } | null)?.total || 0;
 
     const orderByClause = sort ? `ORDER BY ${escapeColumnName(sort)} ${order}` : 'ORDER BY rowid ASC';
 
@@ -130,8 +129,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ table: string }> }) {
   try {
-    const { env } = getTypedContext();
-    const db = env.PLAYBOX_D1;
+    const db = getPlatformDb();
 
     if (!db) {
       return createJsonResponse({ error: 'D1 database not configured' }, 500);
@@ -179,12 +177,13 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       SELECT * FROM ${escapeColumnName(tableName)} WHERE rowid = last_insert_rowid()
     `
       )
+      .bind()
       .first();
 
     return createJsonResponse(
       {
         success: true,
-        row: lastRow,
+        row: lastRow?.results || null,
       },
       201
     );

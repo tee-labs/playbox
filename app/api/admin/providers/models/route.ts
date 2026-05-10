@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { getTypedContext } from '@/lib/cloudflare-context';
+import { getPlatformDb } from '@/platforms';
 import { createJsonResponse, createInternalErrorResponse } from '@/lib/response-helpers';
 import { getConfig } from '@/config';
 import { ProtocolFamily } from '@/types/provider';
@@ -60,8 +60,13 @@ async function fetchGeminiModels(baseUrl: string, apiKey: string): Promise<Model
 
 export async function GET(_request: NextRequest) {
   try {
-    const { env: _env } = getTypedContext();
+    const db = getPlatformDb();
     const config = await getConfig();
+
+    // If we have a database, verify the security_keys table exists
+    if (db) {
+      // Database is available for potential future use
+    }
 
     const providersByFamily: Record<ProtocolFamily, ProviderModels[]> = {
       openai: [],

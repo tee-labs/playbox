@@ -1,13 +1,12 @@
 import { NextRequest } from 'next/server';
-import { getTypedContext } from '@/lib/cloudflare-context';
+import { getPlatformDb } from '@/platforms';
 import { createJsonResponse, createNotFoundResponse, createInternalErrorResponse } from '@/lib/response-helpers';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const { env } = getTypedContext();
-    const db = env.PLAYBOX_D1;
+    const db = getPlatformDb();
 
     if (!db) {
       return createJsonResponse({ error: 'D1 database not configured' }, 500);
@@ -28,11 +27,11 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
       .bind(id)
       .first();
 
-    if (!result) {
+    if (!result || !result.results) {
       return createNotFoundResponse('Provider not found');
     }
 
-    const row = result as Record<string, unknown>;
+    const row = result.results as Record<string, unknown>;
     return createJsonResponse({
       success: true,
       provider: {
@@ -58,8 +57,7 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const { env } = getTypedContext();
-    const db = env.PLAYBOX_D1;
+    const db = getPlatformDb();
 
     if (!db) {
       return createJsonResponse({ error: 'D1 database not configured' }, 500);
@@ -83,11 +81,11 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     };
 
     const existing = await db.prepare('SELECT id FROM providers WHERE id = ?').bind(id).first();
-    if (!existing) {
+    if (!existing || !existing.results) {
       return createNotFoundResponse('Provider not found');
     }
 
-    const existingRow = (await db.prepare('SELECT * FROM providers WHERE id = ?').bind(id).first()) as Record<string, unknown>;
+    const existingRow = (await db.prepare('SELECT * FROM providers WHERE id = ?').bind(id).first()).results as Record<string, unknown>;
 
     const name = body.name ?? (existingRow.name as string);
     const type = body.type ?? (existingRow.type as string);
@@ -133,8 +131,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
 export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const { env } = getTypedContext();
-    const db = env.PLAYBOX_D1;
+    const db = getPlatformDb();
 
     if (!db) {
       return createJsonResponse({ error: 'D1 database not configured' }, 500);
@@ -147,7 +144,7 @@ export async function DELETE(_request: NextRequest, { params }: { params: Promis
     }
 
     const existing = await db.prepare('SELECT id FROM providers WHERE id = ?').bind(id).first();
-    if (!existing) {
+    if (!existing || !existing.results) {
       return createNotFoundResponse('Provider not found');
     }
 

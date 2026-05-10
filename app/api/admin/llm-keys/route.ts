@@ -1,13 +1,12 @@
 import { NextRequest } from 'next/server';
-import { getTypedContext } from '@/lib/cloudflare-context';
+import { getPlatformDb } from '@/platforms';
 import { createJsonResponse, createInternalErrorResponse } from '@/lib/response-helpers';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const { env } = getTypedContext();
-    const db = env.PLAYBOX_D1;
+    const db = getPlatformDb();
 
     if (!db) {
       return createJsonResponse({ error: 'D1 database not configured' }, 500);
@@ -21,6 +20,7 @@ export async function GET() {
       ORDER BY created_at DESC
     `
       )
+      .bind()
       .all();
 
     const keys = (result.results as readonly Record<string, unknown>[]).map((row) => ({
@@ -42,8 +42,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const { env } = getTypedContext();
-    const db = env.PLAYBOX_D1;
+    const db = getPlatformDb();
 
     if (!db) {
       return createJsonResponse({ error: 'D1 database not configured' }, 500);

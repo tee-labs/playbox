@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
-import { getTypedContext } from '@/lib/cloudflare-context';
+import { getPlatformDb } from '@/platforms';
 import { createJsonResponse, createInternalErrorResponse, createNotFoundResponse } from '@/lib/response-helpers';
-import type { D1Database } from '@/types';
+import type { SqlClient } from '@/db/types';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,7 +11,7 @@ interface ColumnInfo {
   pk: number;
 }
 
-async function validateTable(db: D1Database, tableName: string): Promise<ColumnInfo[] | null> {
+async function validateTable(db: SqlClient, tableName: string): Promise<ColumnInfo[] | null> {
   const tablesResult = await db
     .prepare(
       `
@@ -25,9 +25,9 @@ async function validateTable(db: D1Database, tableName: string): Promise<ColumnI
     .bind(tableName)
     .first();
 
-  if (!tablesResult) return null;
+  if (!tablesResult || !tablesResult.results) return null;
 
-  const columnsResult = await db.prepare(`PRAGMA table_info(${tableName})`).all();
+  const columnsResult = await db.prepare(`PRAGMA table_info(${tableName})`).bind().all();
   return columnsResult.results as unknown as ColumnInfo[];
 }
 
@@ -40,8 +40,7 @@ function escapeColumnName(name: string): string {
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ table: string; rowid: string }> }) {
   try {
-    const { env } = getTypedContext();
-    const db = env.PLAYBOX_D1;
+    const db = getPlatformDb();
 
     if (!db) {
       return createJsonResponse({ error: 'D1 database not configured' }, 500);
@@ -68,13 +67,13 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       .bind(rowid)
       .first();
 
-    if (!row) {
+    if (!row || !row.results) {
       return createNotFoundResponse(`Row with rowid ${rowid} not found`);
     }
 
     return createJsonResponse({
       success: true,
-      row,
+      row: row.results,
     });
   } catch (error) {
     console.error('Error fetching row:', error);
@@ -84,8 +83,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ table: string; rowid: string }> }) {
   try {
-    const { env } = getTypedContext();
-    const db = env.PLAYBOX_D1;
+    const db = getPlatformDb();
 
     if (!db) {
       return createJsonResponse({ error: 'D1 database not configured' }, 500);
@@ -144,7 +142,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
     return createJsonResponse({
       success: true,
-      row: updatedRow,
+      row: updatedRow?.results || null,
     });
   } catch (error) {
     console.error('Error updating row:', error);
@@ -154,8 +152,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ table: string; rowid: string }> }) {
   try {
-    const { env } = getTypedContext();
-    const db = env.PLAYBOX_D1;
+    const db = getPlatformDb();
 
     if (!db) {
       return createJsonResponse({ error: 'D1 database not configured' }, 500);
@@ -182,7 +179,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
       .bind(rowid)
       .first();
 
-    if (!existingRow) {
+    if (!existingRow || !existingRow.results) {
       return createNotFoundResponse(`Row with rowid ${rowid} not found`);
     }
 

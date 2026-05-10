@@ -1,10 +1,9 @@
 import { NextRequest } from 'next/server';
-import { getTypedContext } from '@/lib/cloudflare-context';
 import { authenticate } from '@/lib/auth';
-import { createUnauthorizedResponse } from '@/lib/response-helpers';
+import { createUnauthorizedResponse, createJsonResponse } from '@/lib/response-helpers';
 import { getConfig, resolveProvider } from '@/config';
 import { ProtocolFactory } from '@/protocols';
-
+import { getPlatformDb } from '@/platforms';
 import { CORS_HEADERS } from '@/utils/constants';
 import { createLogger } from '@/utils/logger';
 
@@ -55,9 +54,7 @@ function parseActionSegment(actionSegment: string): { model: string; action: str
 export async function POST(request: NextRequest, { params }: { params: Promise<{ action: string[] }> }) {
   const logger = createLogger();
 
-  const { env } = getTypedContext();
-
-  const authResult = await authenticate(request, env);
+  const authResult = await authenticate(request);
   if (!authResult) {
     return createUnauthorizedResponse();
   }
@@ -130,6 +127,11 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     if (rawBody.tools) geminiRequest.tools = rawBody.tools;
     if (rawBody.toolConfig) geminiRequest.toolConfig = rawBody.toolConfig;
 
+    const db = getPlatformDb();
+    if (!db) {
+      return createJsonResponse({ error: 'D1 database not configured' }, 500);
+    }
+
     const MAX_ATTEMPTS = protocol.getAttempt();
     let lastResponse: Response | undefined;
 
@@ -137,9 +139,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     let fetchHeaders: Record<string, string> = {};
 
     for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-      const apiKeyValue = await protocol.getApiKey(env, provider);
+      const apiKeyValue = await protocol.getApiKey(db, provider);
       fetchUrl = await protocol.getEndpoint(provider, realModel, isStream, apiKeyValue);
-      fetchHeaders = await protocol.getHeaders(provider, env, apiKeyValue);
+      fetchHeaders = await protocol.getHeaders(provider, db, apiKeyValue);
 
       const requestBody = geminiRequest;
 

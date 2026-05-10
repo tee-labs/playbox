@@ -1,13 +1,12 @@
 import { NextRequest } from 'next/server';
-import { getTypedContext } from '@/lib/cloudflare-context';
+import { getPlatformDb } from '@/platforms';
 import { createJsonResponse, createInternalErrorResponse } from '@/lib/response-helpers';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const { env } = getTypedContext();
-    const db = env.PLAYBOX_D1;
+    const db = getPlatformDb();
 
     if (!db) {
       return createJsonResponse({ error: 'D1 database not configured' }, 500);
@@ -19,6 +18,7 @@ export async function GET() {
          FROM providers
          ORDER BY sort_order ASC`
       )
+      .bind()
       .all();
 
     const providers = (result.results as readonly Record<string, unknown>[]).map((row) => ({
@@ -45,8 +45,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const { env } = getTypedContext();
-    const db = env.PLAYBOX_D1;
+    const db = getPlatformDb();
 
     if (!db) {
       return createJsonResponse({ error: 'D1 database not configured' }, 500);
@@ -81,7 +80,7 @@ export async function POST(request: NextRequest) {
     }
 
     const existing = await db.prepare('SELECT id FROM providers WHERE name = ?').bind(name).first();
-    if (existing) {
+    if (existing && existing.results) {
       return createJsonResponse({ error: `Provider "${name}" already exists` }, 409);
     }
 
@@ -126,8 +125,7 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    const { env } = getTypedContext();
-    const db = env.PLAYBOX_D1;
+    const db = getPlatformDb();
 
     if (!db) {
       return createJsonResponse({ error: 'D1 database not configured' }, 500);
@@ -153,7 +151,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const existing = await db.prepare('SELECT id FROM providers WHERE id = ?').bind(id).first();
-    if (!existing) {
+    if (!existing || !existing.results) {
       return createJsonResponse({ error: 'Provider not found' }, 404);
     }
 
@@ -203,8 +201,7 @@ export async function PUT(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const { env } = getTypedContext();
-    const db = env.PLAYBOX_D1;
+    const db = getPlatformDb();
 
     if (!db) {
       return createJsonResponse({ error: 'D1 database not configured' }, 500);
@@ -223,7 +220,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     const existing = await db.prepare('SELECT id FROM providers WHERE id = ?').bind(id).first();
-    if (!existing) {
+    if (!existing || !existing.results) {
       return createJsonResponse({ error: 'Provider not found' }, 404);
     }
 
