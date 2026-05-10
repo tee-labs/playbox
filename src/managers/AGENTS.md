@@ -11,18 +11,19 @@ rotation, and D1 storage.
 
 ```
 managers/
-├── auth.ts # AuthManager: request verification (Bearer, x-api-key, x-goog-api-key)
-└── key.ts  # KeyManager: token refresh, D1 operations
+├── auth.ts # AuthManager: request verification (Bearer, x-api-key, x-goog-api-key, ?key query param)
+└── key.ts # KeyManager: token refresh, D1 operations, OAuth credential rotation
 ```
 
 ## WHERE TO LOOK
 
-| Task             | Location  | Notes                               |
-| ---------------- | --------- | ----------------------------------- |
-| Request auth     | `auth.ts` | `AuthManager.verify(request, env)`  |
-| Token refresh    | `key.ts`  | `KeyManager.getValidAccessToken()`  |
-| API key rotation | `key.ts`  | `KeyManager.getRandomApiKey()`      |
-| D1 key queries   | `key.ts`  | `security_keys` table               |
+| Task              | Location  | Notes                                                 |
+| ----------------- | --------- | ----------------------------------------------------- |
+| Request auth      | `auth.ts` | `AuthManager.verify(request, env)` — 4 auth methods   |
+| Token refresh     | `key.ts`  | `KeyManager.getValidAccessToken()` — auto-refresh     |
+| API key rotation  | `key.ts`  | `KeyManager.getRandomApiKey()` — random from 100      |
+| OAuth credentials | `key.ts`  | `KeyManager.getRandomOAuthCredentials()` — OAuth keys |
+| D1 key queries    | `key.ts`  | `security_keys` table (API_KEY + EMAIL types)         |
 
 ## CONVENTIONS
 

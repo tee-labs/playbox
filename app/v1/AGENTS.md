@@ -39,7 +39,7 @@ v1/
 ## ANTI-PATTERNS
 
 - **DO NOT** place public routes under `app/api/` — use `app/v1/`
-- **DO NOT** skip auth check — all routes require `x-api-key` header
+- **DO NOT** skip auth check — all routes require authentication (Bearer, x-api-key, x-goog-api-key, or ?key param)
 - **DO NOT** forget CORS headers — use `CORS_HEADERS` from `@/utils/constants`
 
 ## NOTES

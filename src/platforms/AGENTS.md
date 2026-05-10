@@ -4,9 +4,8 @@
 
 ## OVERVIEW
 
-Platform abstraction layer for multi-platform deployment support.
-Provides unified access to platform-specific resources across
-Cloudflare Workers, Vercel, Node.js, and other environments.
+Platform abstraction layer for multi-platform deployment support. Provides unified access to platform-specific resources
+across Cloudflare Workers, Vercel, Node.js, and other environments.
 
 ## STRUCTURE
 
@@ -18,25 +17,25 @@ platforms/
 
 ## WHERE TO LOOK
 
-| Task                    | Location      | Notes                          |
-|-------------------------|---------------|--------------------------------|
-| Get database client     | `index.ts`    | `getPlatformDb()`              |
-| Platform detection      | `index.ts`    | `detectPlatform()`, `isPlatform()` |
-| Platform types          | `types.ts`    | `PlatformType`, `PlatformContext` |
+| Task                | Location   | Notes                              |
+| ------------------- | ---------- | ---------------------------------- |
+| Get database client | `index.ts` | `getPlatformDb()`                  |
+| Platform detection  | `index.ts` | `detectPlatform()`, `isPlatform()` |
+| Platform types      | `types.ts` | `PlatformType`, `PlatformContext`  |
 
 ## USAGE
 
 ```typescript
 import { getPlatformDb, getPlatformType } from '@/platforms';
 
-// Get database (null if not available)
+// Get database (SqlClient — null if not available)
 const db = getPlatformDb();
 if (!db) {
   throw new Error('Database not available on this platform');
 }
 
-// Query database
-const { results } = await db.prepare('SELECT * FROM users').all();
+// Query database (via SqlClient interface)
+const { results } = await db.prepare('SELECT * FROM users').bind(id).all();
 
 // Check platform
 if (isPlatform('cloudflare')) {
@@ -46,11 +45,11 @@ if (isPlatform('cloudflare')) {
 
 ## PLATFORM SUPPORT
 
-| Platform     | Database    | Notes                              |
-|--------------|-------------|-----------------------------------|
-| Cloudflare   | D1          | Full support via getCloudflareContext() |
-| Vercel       | PostgreSQL  | Planned (not yet implemented)     |
-| Node.js      | None        | For local development/testing     |
+| Platform   | Database            | Notes                                      |
+| ---------- | ------------------- | ------------------------------------------ |
+| Cloudflare | D1 (native binding) | Full support via getCloudflareContext()    |
+| Vercel     | D1 REST API         | Via `D1RestAdapter` with Bearer token auth |
+| Node.js    | None                | For local development/testing              |
 
 ## CONVENTIONS
 

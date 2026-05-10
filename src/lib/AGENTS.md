@@ -14,7 +14,7 @@ lib/
 ├── auth.ts # API key verification
 ├── middleware.ts # Route middleware (auth, CORS, error handling)
 ├── response-helpers.ts # JSON/error response builders
-└── cloudflare-context.ts # CF context type utilities
+└── cloudflare-context.ts # CF context type utilities (createCloudflareContext, getTypedContext)
 ```
 
 ## WHERE TO LOOK
@@ -24,7 +24,7 @@ lib/
 | API key auth      | `auth.ts`               | `authenticate()` function                                      |
 | Route wrappers    | `middleware.ts`         | `withAuthentication`, `withCorsPreflight`, `withErrorHandling` |
 | Response builders | `response-helpers.ts`   | `createJsonResponse`, `createUnauthorizedResponse`, etc.       |
-| CF context types  | `cloudflare-context.ts` | Cloudflare bindings interface                                  |
+| CF context types  | `cloudflare-context.ts` | `createCloudflareContext()`, `getTypedContext()` for bindings  |
 
 ## CONVENTIONS
 
@@ -40,6 +40,7 @@ lib/
 
 ## NOTES
 
-- **Auth check**: Compares `x-api-key` header against `AUTH_TOKEN` env var
+- **Auth check**: Compares `Authorization` (Bearer), `x-api-key`, `x-goog-api-key` headers, and `?key` query param
+  against `AUTH_TOKEN` env var
 - **CORS preflight**: Returns 204 for OPTIONS requests
 - **Error format**: Consistent `{ error, message, type }` structure
