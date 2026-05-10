@@ -1,9 +1,7 @@
 import { NextRequest } from 'next/server';
-import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { createJsonResponse, createInternalErrorResponse } from '@/lib/response-helpers';
 import { getConfig } from '@/config';
 import { KeyManager } from '@/managers/key';
-import type { Env } from '@/types';
 import type { ProviderConfig } from '@/types/provider';
 
 export const dynamic = 'force-dynamic';
@@ -79,8 +77,6 @@ function buildGeminiRequest(model: string, endpoint: string, apiKey: string): Re
 
 export async function POST(request: NextRequest) {
   try {
-    const { env: _env } = getCloudflareContext();
-    const _unusedEnv = _env as unknown as Env;
     const config = await getConfig();
 
     const body = (await request.json()) as SpeedTestRequest;

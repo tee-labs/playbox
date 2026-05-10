@@ -33,10 +33,13 @@ const _loadOAuthCredentials = async (provider: string): Promise<OAuthCredentials
 const _loadApiKeys = async (providerKey: string): Promise<string[]> => {
   const db = getPlatformDb();
   if (!db) {
+    console.warn('[KeyManager] D1 database not available');
     return [];
   }
   const query = `SELECT content FROM security_keys WHERE type = 'API_KEY' AND provider = ? ORDER BY RANDOM() LIMIT 100`;
+  console.log('[KeyManager] Query:', query, 'Provider:', providerKey);
   const { results } = await db.prepare(query).bind(providerKey).all();
+  console.log('[KeyManager] Results count:', results?.length ?? 0);
   if (!results || results.length === 0) {
     throw new Error(`No API keys found for provider: ${providerKey}`);
   }
