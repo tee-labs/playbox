@@ -2,9 +2,18 @@ import { NextRequest } from 'next/server';
 import { authenticate } from '@/lib/auth';
 import { createJsonResponse } from '@/lib/response-helpers';
 import { getConfig } from '@/config';
+import { CORS_HEADERS } from '@/utils/constants';
 import type { ProviderConfig } from '@/types';
 
 export const dynamic = 'force-dynamic';
+
+// Handle CORS preflight requests
+export async function OPTIONS() {
+  return new Response(null, {
+    status: 204,
+    headers: CORS_HEADERS,
+  });
+}
 
 interface ModelInfo {
   id: string;
