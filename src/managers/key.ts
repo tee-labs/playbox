@@ -40,6 +40,10 @@ const _loadApiKeys = async (providerKey: string): Promise<string[]> => {
   console.log('[KeyManager] Query:', query, 'Provider:', providerKey);
   const { results } = await db.prepare(query).bind(providerKey).all();
   console.log('[KeyManager] Results count:', results?.length ?? 0);
+  console.log('[KeyManager] Keys:', results?.map((r: Record<string, unknown>) => {
+    const typedRow = r as unknown as { content: string };
+    return typedRow.content.substring(0, 20) + '...';
+  }));
   if (!results || results.length === 0) {
     throw new Error(`No API keys found for provider: ${providerKey}`);
   }

@@ -20,6 +20,7 @@ interface ChatBody {
 
 export async function POST(request: NextRequest) {
   const logger = createLogger();
+  logger.info('=== Chat Completions Request Start ===');
 
   const authResult = await authenticate(request);
   if (!authResult) {
@@ -35,9 +36,11 @@ export async function POST(request: NextRequest) {
 
     const requestedModel = rawBody.model;
     const isStream = rawBody.stream === true;
+    logger.info('Request details', { model: requestedModel, stream: isStream });
 
     const config = await getConfig();
     const { name: providerName, provider, realModel } = resolveProvider(config, requestedModel, 'openai');
+    logger.info('Provider resolved', { providerName, providerEndpoint: provider.endpoint, realModel });
 
     const upstreamProtocol = ProtocolFactory.get('openai');
 
@@ -56,6 +59,12 @@ export async function POST(request: NextRequest) {
       const upstreamApiKey = await upstreamProtocol.getApiKey(db, provider);
       fetchUrl = await upstreamProtocol.getEndpoint(provider, realModel, isStream, upstreamApiKey);
       fetchHeaders = await upstreamProtocol.getHeaders(provider, db, upstreamApiKey);
+      logger.info('Upstream request', { 
+        attempt, 
+        url: fetchUrl, 
+        headers: { ...fetchHeaders, Authorization: fetchHeaders['Authorization'] ? '[REDACTED]' : undefined },
+        body: JSON.stringify(upstreamRequest).substring(0, 200),
+      });
       lastResponse = await fetch(fetchUrl, {
         method: 'POST',
         headers: fetchHeaders,
