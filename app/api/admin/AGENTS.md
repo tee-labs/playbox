@@ -8,26 +8,22 @@ Admin API endpoints for D1 tables with full CRUD and batch operations.
 
 ```
 api/admin/
-├── kv/
-│   ├── route.ts                    # List namespaces (GET)
-│   ├── [namespace]/route.ts        # List/create keys (GET, POST)
-│   ├── [namespace]/[key]/route.ts  # Key CRUD (GET, PUT, DELETE)
-│   ├── [namespace]/batch/route.ts  # Batch delete (POST)
-│   └── [namespace]/import/route.ts # Bulk import (POST)
 ├── tables/
-│   ├── route.ts                    # List tables with schemas (GET)
-│   └── [table]/
-│       ├── rows/route.ts           # List/create rows (GET, POST)
-│       ├── rows/[rowid]/route.ts   # Row CRUD (GET, PUT, DELETE)
-│       └── batch/route.ts          # Batch delete/import (POST)
-├── llm-keys/route.ts               # LLM key management (GET, POST)
-├── llm-keys/[id]/route.ts          # Single key operations (GET, PUT, DELETE)
-├── github-gists/route.ts            # GitHub Gists management (GET, POST)
-├── github-gists/[id]/route.ts       # Single gist operations (GET, PUT, DELETE)
-├── domains/route.ts                # Domain CRUD (GET, POST, PUT, DELETE)
-├── providers/route.ts              # Provider config (GET, POST, PUT, DELETE)
-├── providers/speed-test/route.ts   # Provider speed test (POST)
-└── providers/models/route.ts       # Provider models (GET)
+│ ├── route.ts # List tables with schemas (GET)
+│ └── [table]/
+│ ├── rows/route.ts # List/create rows (GET, POST)
+│ ├── rows/[rowid]/route.ts # Row CRUD (GET, PUT, DELETE)
+│ └── batch/route.ts # Batch delete/import (POST)
+├── llm-keys/route.ts # LLM key management (GET, POST)
+├── llm-keys/[id]/route.ts # Single key operations (GET, PUT, DELETE)
+├── github-gists/route.ts # GitHub Gists management (GET, POST)
+├── github-gists/[id]/route.ts # Single gist operations (GET, PUT, DELETE)
+├── domains/route.ts # Domain CRUD (GET, POST, PUT, DELETE)
+├── providers/route.ts # Provider config (GET, POST, PUT, DELETE)
+├── providers/[id]/route.ts # Single provider operations (GET, PUT, DELETE)
+├── providers/speed-test/route.ts # Provider speed test (POST)
+├── providers/models/route.ts # Provider models (GET)
+└── providers/models/[provider]/route.ts # Models for specific provider (GET)
 ```
 
 ## WHERE TO LOOK
