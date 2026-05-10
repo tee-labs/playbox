@@ -13,8 +13,25 @@ export interface ChatCompletionResponse {
 
 export interface Choice {
   index: number;
-  message: Message;
+  message: ChatMessage;
   finish_reason: string;
+}
+
+export interface ChatMessage {
+  role: 'system' | 'user' | 'assistant' | 'tool';
+  content: string | null;
+  tool_calls?: ToolCall[];
+  tool_call_id?: string;
+  name?: string;
+}
+
+export interface ToolCall {
+  id: string;
+  type: 'function';
+  function: {
+    name: string;
+    arguments: string;
+  };
 }
 
 export interface Usage {

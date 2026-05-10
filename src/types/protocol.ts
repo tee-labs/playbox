@@ -1,4 +1,6 @@
-import type { ProviderConfig } from './provider';
+import { ProviderConfig } from './provider';
+import type { Env } from './index';
+import type { ExecutionContext } from '../protocols/types';
 
 /**
  * JSON Schema type for tool parameters.
