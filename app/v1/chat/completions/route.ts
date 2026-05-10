@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
         attempt, 
         url: fetchUrl, 
         headers: { ...fetchHeaders, Authorization: fetchHeaders['Authorization'] ? '[REDACTED]' : undefined },
-        body: JSON.stringify(upstreamRequest).substring(0, 200),
+        body: JSON.stringify(upstreamRequest).substring(0, 500),
       });
       lastResponse = await fetch(fetchUrl, {
         method: 'POST',
