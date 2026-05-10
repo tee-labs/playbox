@@ -1,9 +1,7 @@
 import { NextRequest } from 'next/server';
-import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { createJsonResponse, createInternalErrorResponse } from '@/lib/response-helpers';
 import { getConfig } from '@/config';
 import { KeyManager } from '@/managers/key';
-import type { Env } from '@/types';
 import type { ProviderConfig } from '@/types/provider';
 
 export const dynamic = 'force-dynamic';
@@ -52,8 +50,6 @@ async function fetchGeminiModels(baseUrl: string, apiKey: string): Promise<Model
 export async function GET(_request: NextRequest, { params }: { params: Promise<{ provider: string }> }) {
   try {
     const { provider: providerName } = await params;
-    const { env: _env } = getCloudflareContext();
-    const _unusedEnv = _env as unknown as Env;
     const config = await getConfig();
 
     const provider = config.providers[providerName] as ProviderConfig | undefined;
