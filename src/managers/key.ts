@@ -1,6 +1,5 @@
-import type { Env } from '../types';
 import { unstable_cache } from 'next/cache';
-import { getCloudflareContext } from '@opennextjs/cloudflare';
+import { getPlatformDb } from '../platforms';
 
 interface Provider {
   key: string;
@@ -16,9 +15,7 @@ interface OAuthCredentials {
 }
 
 const _loadOAuthCredentials = async (provider: string): Promise<OAuthCredentials[]> => {
-  const raw = getCloudflareContext();
-  const env = raw.env as unknown as Env;
-  const db = env.PLAYBOX_D1;
+  const db = getPlatformDb();
   if (!db) {
     throw new Error('D1 database not available');
   }
@@ -34,9 +31,7 @@ const _loadOAuthCredentials = async (provider: string): Promise<OAuthCredentials
 };
 
 const _loadApiKeys = async (providerKey: string): Promise<string[]> => {
-  const raw = getCloudflareContext();
-  const env = raw.env as unknown as Env;
-  const db = env.PLAYBOX_D1;
+  const db = getPlatformDb();
   if (!db) {
     return [];
   }

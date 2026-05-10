@@ -1,21 +1,20 @@
 import { Provider, ProviderConfig } from '../types/provider';
-import type { Env } from '../types';
+import type { SqlClient } from '../db/types';
 import { unstable_cache } from 'next/cache';
 import { revalidateTag } from 'next/cache';
-import { getCloudflareContext } from '@opennextjs/cloudflare';
+import { getPlatformDb } from '../platforms';
 
 export interface Config {
   providers: Provider;
   default_provider: string;
 }
 
-async function loadProvidersFromD1(env: Env): Promise<Config | null> {
-  const db = env.PLAYBOX_D1;
-  if (!db) return null;
+async function loadProvidersFromD1(db: SqlClient): Promise<Config | null> {
 
   try {
     const { results } = await db
       .prepare('SELECT name, type, family, endpoint, key, models, auth_type FROM providers WHERE enabled = 1 ORDER BY sort_order ASC')
+      .bind()
       .all();
 
     if (!results || results.length === 0) {
@@ -56,9 +55,9 @@ async function loadProvidersFromD1(env: Env): Promise<Config | null> {
 }
 
 const _loadConfigFromD1 = async (): Promise<Config | null> => {
-  const raw = getCloudflareContext();
-  const env = raw.env as unknown as Env;
-  return loadProvidersFromD1(env);
+  const db = getPlatformDb();
+  if (!db) return null;
+  return loadProvidersFromD1(db);
 };
 
 export const getDefaultConfigCached = unstable_cache(
