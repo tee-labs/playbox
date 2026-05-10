@@ -1,4 +1,5 @@
 import type { Env } from '@/types';
+import type { ExecutionContext } from '@/protocols/types';
 import type { CloudflareContext } from './cloudflare-context';
 import { createUnauthorizedResponse } from './response-helpers';
 

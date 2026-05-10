@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { getTypedContext } from '@/lib/cloudflare-context';
 import { createJsonResponse, createInternalErrorResponse, createNotFoundResponse } from '@/lib/response-helpers';
-import type { D1Database, D1PreparedStatement } from '@cloudflare/workers-types';
+import type { D1Database, D1Statement } from '@/types';
 
 export const dynamic = 'force-dynamic';
 
@@ -115,7 +115,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         return createJsonResponse({ error: 'No data to import' }, 400);
       }
 
-      const statements: D1PreparedStatement[] = [];
+      const statements: D1Statement[] = [];
       let successCount = 0;
       let errorCount = 0;
 
@@ -150,7 +150,17 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       }
 
       if (statements.length > 0) {
-        await db.batch(statements);
+        // Check if using native D1 batch (Cloudflare Workers) or REST batch
+        if (typeof db.batch === 'function') {
+          await db.batch(statements);
+        } else if (typeof db.executeBatch === 'function') {
+          // D1 REST adapter: convert D1Statement back to SQL strings
+          const sqlStatements = statements.map((stmt) => {
+            // Access the raw SQL from the statement
+            return (stmt as unknown as { sql?: string }).sql ?? '';
+          });
+          await db.executeBatch(sqlStatements);
+        }
       }
 
       return createJsonResponse(

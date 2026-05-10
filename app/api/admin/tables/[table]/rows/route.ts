@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { getTypedContext } from '@/lib/cloudflare-context';
 import { createJsonResponse, createInternalErrorResponse, createNotFoundResponse } from '@/lib/response-helpers';
-import type { D1Database } from '@cloudflare/workers-types';
+import type { D1Database } from '@/types';
 
 export const dynamic = 'force-dynamic';
 

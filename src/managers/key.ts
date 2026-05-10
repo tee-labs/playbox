@@ -18,8 +18,12 @@ interface OAuthCredentials {
 const _loadOAuthCredentials = async (provider: string): Promise<OAuthCredentials[]> => {
   const raw = getCloudflareContext();
   const env = raw.env as unknown as Env;
+  const db = env.PLAYBOX_D1;
+  if (!db) {
+    throw new Error('D1 database not available');
+  }
   const query = `SELECT content FROM security_keys WHERE type = 'OAUTH_JSON' AND provider = ? ORDER BY RANDOM() LIMIT 100`;
-  const { results } = await env.PLAYBOX_D1.prepare(query).bind(provider).all();
+  const { results } = await db.prepare(query).bind(provider).all();
   if (!results || results.length === 0) {
     throw new Error(`No OAuth credentials found for provider: ${provider}`);
   }
@@ -32,8 +36,12 @@ const _loadOAuthCredentials = async (provider: string): Promise<OAuthCredentials
 const _loadApiKeys = async (providerKey: string): Promise<string[]> => {
   const raw = getCloudflareContext();
   const env = raw.env as unknown as Env;
+  const db = env.PLAYBOX_D1;
+  if (!db) {
+    return [];
+  }
   const query = `SELECT content FROM security_keys WHERE type = 'API_KEY' AND provider = ? ORDER BY RANDOM() LIMIT 100`;
-  const { results } = await env.PLAYBOX_D1.prepare(query).bind(providerKey).all();
+  const { results } = await db.prepare(query).bind(providerKey).all();
   if (!results || results.length === 0) {
     throw new Error(`No API keys found for provider: ${providerKey}`);
   }
