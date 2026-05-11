@@ -287,8 +287,36 @@ describe('SSRF Protection', () => {
       });
 
       it('should accept hexadecimal IP that is valid public IP', () => {
-        const result = validateSafeUrl('http://0x01010101/admin');
+        const result = validateSafeUrl('http://0x01010101/dns-query');
         expect(result.isValid).toBe(true);
+      });
+
+      it('should reject hexadecimal IP that resolves to multicast range', () => {
+        const result = validateSafeUrl('http://0xe0000001/admin');
+        expect(result.isValid).toBe(false);
+      });
+
+      it('should reject hex IP via hex branch (0x7f000001 = 127.0.0.1)', () => {
+        const result = validateSafeUrl('http://0x7f000001/admin');
+        expect(result.isValid).toBe(false);
+        expect(result.error).toContain('127.0.0.0/8');
+      });
+
+      it('should reject decimal IP that resolves to private range (3232265985 = 192.168.1.1)', () => {
+        const result = validateSafeUrl('http://3232265985/admin');
+        expect(result.isValid).toBe(false);
+        expect(result.error).toContain('192.168.0.0/16');
+      });
+
+      it('should reject octal IP matching regex that resolves to private range', () => {
+        const result = validateSafeUrl('http://0177.0000.0001/admin');
+        expect(result.isValid).toBe(false);
+        expect(result.error).toContain('Access denied');
+      });
+
+      it('should reject octal IP that resolves to loopback', () => {
+        const result = validateSafeUrl('http://0177.0.0.02/admin');
+        expect(result.isValid).toBe(false);
       });
 
       it('should reject hexadecimal IP that resolves to multicast range', () => {
@@ -298,6 +326,13 @@ describe('SSRF Protection', () => {
 
       it('should reject octal IP that resolves to loopback', () => {
         const result = validateSafeUrl('http://0177.0.0.02/admin');
+        expect(result.isValid).toBe(false);
+      });
+    });
+
+    describe('decimal IP boundary edge cases', () => {
+      it('should handle decimal IP at upper boundary 4294967295', () => {
+        const result = validateSafeUrl('http://4294967295/admin');
         expect(result.isValid).toBe(false);
       });
     });

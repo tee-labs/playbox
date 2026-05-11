@@ -4,6 +4,10 @@ vi.mock('@opennextjs/cloudflare', () => ({
   getCloudflareContext: vi.fn(),
 }));
 
+vi.mock('../../../src/platforms', () => ({
+  getPlatformDb: vi.fn(),
+}));
+
 const { mockGetOAuthCredentialsCached, mockGetApiKeysCached } = vi.hoisted(() => ({
   mockGetOAuthCredentialsCached: vi.fn(),
   mockGetApiKeysCached: vi.fn(),

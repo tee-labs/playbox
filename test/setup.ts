@@ -1,6 +1,30 @@
 import { beforeAll, afterEach, afterAll } from 'vitest';
 import { vi } from 'vitest';
 
+// Mock next/cache so unstable_cache works in tests
+vi.mock('next/cache', () => ({
+  unstable_cache: vi.fn((fn: (...args: unknown[]) => unknown, _tags: string[], _opts: object) => {
+    const cache = new Map<string, unknown>();
+    return (...args: unknown[]) => {
+      const key = JSON.stringify(args);
+      if (cache.has(key)) {
+        return cache.get(key);
+      }
+      const result = fn(...args);
+      if (result instanceof Promise) {
+        return result.then((v) => {
+          cache.set(key, v);
+          return v;
+        });
+      }
+      cache.set(key, result);
+      return result;
+    };
+  }),
+  revalidateTag: vi.fn(),
+  revalidatePath: vi.fn(),
+}));
+
 // Mock getCloudflareContext globally for unstable_cache support
 vi.mock('@opennextjs/cloudflare', () => ({
   getCloudflareContext: vi.fn(() => ({

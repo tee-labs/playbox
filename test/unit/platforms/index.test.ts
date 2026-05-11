@@ -7,8 +7,10 @@ import {
   getPlatformType,
   isPlatform,
   getPlatformEnv,
+  getPlatformDb,
   resetPlatformContext,
   setPlatformContext,
+  getPlatformContext,
 } from '../../../src/platforms';
 import type { PlatformContext, PlatformType } from '../../../src/platforms/types';
 
@@ -115,8 +117,70 @@ describe('Platform Abstraction', () => {
       expect(getPlatformType()).toBe('other');
 
       resetPlatformContext();
-      // After reset, should use default platform detection
       expect(['nodejs', 'cloudflare', 'vercel', 'other']).toContain(getPlatformType());
+    });
+  });
+
+  describe('getPlatformDb', () => {
+    it('should return database from context', () => {
+      resetPlatformContext();
+      const mockDb = {} as any;
+      const customContext: PlatformContext = {
+        getDatabase: () => mockDb,
+        getPlatformType: () => 'nodejs',
+        isPlatform: (p) => p === 'nodejs',
+        getEnv: () => ({ platformType: 'nodejs', primaryDb: mockDb }),
+      };
+      setPlatformContext(customContext);
+
+      expect(getPlatformDb()).toBe(mockDb);
+    });
+
+    it('should return null when no database available', () => {
+      resetPlatformContext();
+      const customContext: PlatformContext = {
+        getDatabase: () => null,
+        getPlatformType: () => 'nodejs',
+        isPlatform: (p) => p === 'nodejs',
+        getEnv: () => ({ platformType: 'nodejs', primaryDb: null }),
+      };
+      setPlatformContext(customContext);
+
+      expect(getPlatformDb()).toBeNull();
+    });
+  });
+
+  describe('getPlatformContext', () => {
+    it('should return the current context', () => {
+      resetPlatformContext();
+      const customContext: PlatformContext = {
+        getDatabase: () => null,
+        getPlatformType: () => 'vercel',
+        isPlatform: (p) => p === 'vercel',
+        getEnv: () => ({ platformType: 'vercel', primaryDb: null }),
+      };
+      setPlatformContext(customContext);
+
+      const ctx = getPlatformContext();
+      expect(ctx.getPlatformType()).toBe('vercel');
+    });
+  });
+
+  describe('Cloudflare context via setPlatformContext', () => {
+    it('should provide execution context for cloudflare', () => {
+      resetPlatformContext();
+      const mockExecCtx = { waitUntil: vi.fn(), passThroughOnException: vi.fn() };
+      const customContext: PlatformContext = {
+        getDatabase: () => null,
+        getPlatformType: () => 'cloudflare',
+        isPlatform: (p) => p === 'cloudflare',
+        getEnv: () => ({ platformType: 'cloudflare', primaryDb: null }),
+        getExecutionContext: () => mockExecCtx as any,
+      };
+      setPlatformContext(customContext);
+
+      const ctx = getPlatformContext();
+      expect(ctx.getExecutionContext?.()).toBe(mockExecCtx);
     });
   });
 });
