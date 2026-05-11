@@ -57,9 +57,9 @@ export async function authenticate(request: Request, env?: Env): Promise<boolean
 
   const result = await db.prepare('SELECT * FROM llm_api_keys WHERE api_key = ? AND is_active = 1').bind(apiKey).first();
 
-  if (!result) return false;
+  if (!result || !result.results) return false;
 
-  const record = result as unknown as ApiKeyRecord;
+  const record = result.results as unknown as ApiKeyRecord;
 
   if (record.expires_at) {
     const now = new Date().toISOString();

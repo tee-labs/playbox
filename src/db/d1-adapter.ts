@@ -6,22 +6,15 @@
  */
 
 import type { D1Database, D1PreparedStatement } from '@cloudflare/workers-types';
-import type {
-  SqlClient,
-  Statement,
-  BoundStatement,
-  QueryResults,
-  QueryFirstResult,
-  RunResult,
-  BatchResult,
-  QueryResultRow,
-} from './types';
+import type { SqlClient, Statement, BoundStatement, QueryResults, QueryFirstResult, RunResult, BatchResult, QueryResultRow } from './types';
 
 function d1ToStatement(stmt: D1PreparedStatement): BoundStatement {
   return {
     all: () => stmt.all() as Promise<QueryResults>,
-    first: <T extends QueryResultRow = QueryResultRow>() =>
-      stmt.first() as Promise<QueryFirstResult<T>>,
+    first: async <T extends QueryResultRow = QueryResultRow>() => {
+      const row = await stmt.first<T>();
+      return { results: row ?? null } as QueryFirstResult<T>;
+    },
     run: () => stmt.run() as unknown as Promise<RunResult>,
   };
 }
