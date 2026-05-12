@@ -39,6 +39,7 @@ interface ProviderRow {
   key: string;
   models: string[];
   auth_type: string;
+  auto_models: string;
   sort_order: number;
   enabled: boolean;
   created_at: string;
@@ -91,6 +92,7 @@ interface FormValues {
   key: string;
   models: string[];
   auth_type: string;
+  auto_models: string;
   sort_order: number;
   enabled: boolean;
 }
@@ -168,6 +170,7 @@ export default function ProviderConfigTab() {
       sort_order: 0,
       enabled: true,
       models: [],
+      auto_models: '',
     });
     setModalOpen(true);
   };
@@ -183,6 +186,7 @@ export default function ProviderConfigTab() {
       key: record.key,
       models: record.models || [],
       auth_type: record.auth_type || 'bearer',
+      auto_models: record.auto_models || '',
       sort_order: record.sort_order ?? 0,
       enabled: record.enabled,
     });
@@ -271,15 +275,30 @@ export default function ProviderConfigTab() {
       width: 80,
       render: (models: string[]) => <Tag color={models?.length > 0 ? 'green' : 'default'}>{models?.length || 0}</Tag>,
     },
-    {
-      title: 'Auth',
-      dataIndex: 'auth_type',
-      key: 'auth_type',
-      width: 80,
-      render: (authType: string) => <Tag>{authType || 'bearer'}</Tag>,
-    },
-    {
-      title: 'Sort',
+{
+    title: 'Auth',
+    dataIndex: 'auth_type',
+    key: 'auth_type',
+    width: 80,
+    render: (authType: string) => <Tag>{authType || 'bearer'}</Tag>,
+  },
+  {
+    title: 'Auto Models',
+    dataIndex: 'auto_models',
+    key: 'auto_models',
+    width: 120,
+    ellipsis: true,
+    render: (autoModels: string) =>
+      autoModels ? (
+        <code style={{ fontSize: '11px', fontFamily: "'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace" }}>
+          {autoModels}
+        </code>
+      ) : (
+        <Tag>全部</Tag>
+      ),
+  },
+  {
+    title: 'Sort',
       dataIndex: 'sort_order',
       key: 'sort_order',
       width: 60,
@@ -404,6 +423,20 @@ export default function ProviderConfigTab() {
 
           <Form.Item name="models" label="Models" extra="输入模型 ID 后按 Enter 添加">
             <Select mode="tags" placeholder="输入模型 ID..." tokenSeparators={[',']} style={{ width: '100%' }} open={false} />
+          </Form.Item>
+
+          <Form.Item
+            name="auto_models"
+            label="Auto Models"
+            extra="留空则随机从 Models 中选取；填写逗号分割的模型 ID 则从中随机选取"
+          >
+            <Input
+              placeholder="model-a,model-b（留空 = 全部随机）"
+              style={{
+                fontFamily: "'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace",
+                fontSize: 13,
+              }}
+            />
           </Form.Item>
 
           <Space style={{ width: '100%' }} size="middle">
