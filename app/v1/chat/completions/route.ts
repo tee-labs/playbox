@@ -8,6 +8,7 @@ import type { ProtocolBody } from '@/types';
 import { CORS_HEADERS } from '@/utils/constants';
 import { createLogger } from '@/utils/logger';
 import { getPlatformDb } from '@/platforms';
+import { addGlmThinkingParam } from '@/utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -48,6 +49,9 @@ export async function POST(request: NextRequest) {
     // Override model with realModel from resolveProvider
     upstreamRequest.model = realModel;
 
+    // Add GLM preserved thinking parameter if applicable
+    const requestWithGlmThinking = addGlmThinkingParam(upstreamRequest);
+
     if (!db) {
       return createJsonResponse({ error: 'D1 database not configured' }, 500);
     }
@@ -63,14 +67,14 @@ export async function POST(request: NextRequest) {
       fetchHeaders = await upstreamProtocol.getHeaders(provider, db, upstreamApiKey);
       logger.info('Upstream request', { 
         attempt, 
-        url: fetchUrl, 
+        url: fetchUrl,
         headers: { ...fetchHeaders, Authorization: fetchHeaders['Authorization'] ? '[REDACTED]' : undefined },
-        body: JSON.stringify(upstreamRequest).substring(0, 500),
+        body: JSON.stringify(requestWithGlmThinking).substring(0, 500),
       });
       lastResponse = await fetch(fetchUrl, {
         method: 'POST',
         headers: fetchHeaders,
-        body: JSON.stringify(upstreamRequest),
+        body: JSON.stringify(requestWithGlmThinking),
       });
       if (lastResponse.status !== 429 || attempt === MAX_ATTEMPTS) break;
       logger.warn(`Upstream 429 Rate Limit, retrying...`, { attempt });
