@@ -48,23 +48,38 @@ export async function GET(request: NextRequest) {
         continue;
       }
 
-      if (Array.isArray(typedProvider.models)) {
-        typedProvider.models.forEach((modelId: string) => {
-          if (!seenIds.has(modelId)) {
-            seenIds.add(modelId);
-            modelsList.push({
-              name: `models/${modelId}`,
-              baseModelId: modelId.split('-').slice(0, -1).join('-') || modelId,
-              version: '1.0',
-              displayName: modelId,
-              description: `Gemini model: ${modelId}`,
-              inputTokenLimit: 1048576,
-              outputTokenLimit: 8192,
-              supportedGenerationMethods: ['generateContent'],
-            });
-          }
+    if (Array.isArray(typedProvider.models)) {
+      typedProvider.models.forEach((modelId: string) => {
+        if (!seenIds.has(modelId)) {
+          seenIds.add(modelId);
+          modelsList.push({
+            name: `models/${modelId}`,
+            baseModelId: modelId.split('-').slice(0, -1).join('-') || modelId,
+            version: '1.0',
+            displayName: modelId,
+            description: `Gemini model: ${modelId}`,
+            inputTokenLimit: 1048576,
+            outputTokenLimit: 8192,
+            supportedGenerationMethods: ['generateContent'],
+          });
+        }
+      });
+
+      // Expose "auto" model for Gemini providers
+      if (!seenIds.has('auto')) {
+        seenIds.add('auto');
+        modelsList.push({
+          name: 'models/auto',
+          baseModelId: 'auto',
+          version: '1.0',
+          displayName: 'auto',
+          description: 'Auto model: randomly picks from provider models',
+          inputTokenLimit: 1048576,
+          outputTokenLimit: 8192,
+          supportedGenerationMethods: ['generateContent'],
         });
       }
+    }
     }
 
     const response: GeminiModelsResponse = {

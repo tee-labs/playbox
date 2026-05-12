@@ -13,7 +13,7 @@ async function loadProvidersFromD1(db: SqlClient): Promise<Config | null> {
 
   try {
     const { results } = await db
-      .prepare('SELECT name, type, family, endpoint, key, models, auth_type FROM providers WHERE enabled = 1 ORDER BY sort_order ASC')
+      .prepare('SELECT name, type, family, endpoint, key, models, auth_type, auto_models FROM providers WHERE enabled = 1 ORDER BY sort_order ASC')
       .bind()
       .all();
 
@@ -35,6 +35,7 @@ async function loadProvidersFromD1(db: SqlClient): Promise<Config | null> {
           key: row.key as string,
           models,
           ...(row.auth_type ? { authType: row.auth_type as ProviderConfig['authType'] } : {}),
+          ...(row.auto_models ? { autoModels: row.auto_models as string } : {}),
         };
 
         if (!defaultProvider) {

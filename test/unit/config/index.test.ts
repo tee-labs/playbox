@@ -111,15 +111,97 @@ describe('Config', () => {
       expect(result.provider).toBeUndefined();
     });
 
-    it('should resolve provider with prefixed model format', () => {
-      const config = mockConfig;
+  it('should resolve provider with prefixed model format', () => {
+    const config = mockConfig;
 
-      const result = resolveProvider(config, 'longcat/LongCat-Flash-Chat');
+    const result = resolveProvider(config, 'longcat/LongCat-Flash-Chat');
+
+    expect(result.name).toBe('longcat');
+    expect(result.realModel).toBe('LongCat-Flash-Chat');
+  });
+
+  describe('auto model resolution', () => {
+    it('should resolve "provider/auto" by randomly picking from provider models when autoModels is empty', () => {
+      const result = resolveProvider(mockConfig, 'longcat/auto');
 
       expect(result.name).toBe('longcat');
-      expect(result.realModel).toBe('LongCat-Flash-Chat');
+      expect(['LongCat-Flash-Chat', 'LongCat-Flash-Lite']).toContain(result.realModel);
+    });
+
+    it('should resolve "provider/auto" by picking from autoModels when configured', () => {
+      const config: Config = {
+        providers: {
+          longcat: {
+            type: 'openai',
+            family: 'openai',
+            endpoint: 'https://api.longcat.chat/openai',
+            key: 'LongCat',
+            models: ['LongCat-Flash-Chat', 'LongCat-Flash-Lite', 'LongCat-Flash-Thinking'],
+            autoModels: 'LongCat-Flash-Chat,LongCat-Flash-Lite',
+          },
+        },
+        default_provider: 'longcat',
+      };
+
+      const result = resolveProvider(config, 'longcat/auto');
+
+      expect(result.name).toBe('longcat');
+      expect(['LongCat-Flash-Chat', 'LongCat-Flash-Lite']).toContain(result.realModel);
+      // Should never pick a model outside autoModels
+      expect(result.realModel).not.toBe('LongCat-Flash-Thinking');
+    });
+
+    it('should resolve bare "auto" from default provider', () => {
+      const result = resolveProvider(mockConfig, 'auto');
+
+      expect(result.name).toBe('longcat');
+      expect(['LongCat-Flash-Chat', 'LongCat-Flash-Lite']).toContain(result.realModel);
+    });
+
+    it('should resolve "auto" with autoModels containing spaces', () => {
+      const config: Config = {
+        providers: {
+          longcat: {
+            type: 'openai',
+            family: 'openai',
+            endpoint: 'https://api.longcat.chat/openai',
+            key: 'LongCat',
+            models: ['LongCat-Flash-Chat', 'LongCat-Flash-Lite', 'LongCat-Flash-Thinking'],
+            autoModels: '  LongCat-Flash-Chat , LongCat-Flash-Lite  ',
+          },
+        },
+        default_provider: 'longcat',
+      };
+
+      const result = resolveProvider(config, 'longcat/auto');
+
+      expect(result.name).toBe('longcat');
+      expect(['LongCat-Flash-Chat', 'LongCat-Flash-Lite']).toContain(result.realModel);
+      expect(result.realModel).not.toBe('LongCat-Flash-Thinking');
+    });
+
+    it('should fall back to full model list when autoModels has no valid entries', () => {
+      const config: Config = {
+        providers: {
+          longcat: {
+            type: 'openai',
+            family: 'openai',
+            endpoint: 'https://api.longcat.chat/openai',
+            key: 'LongCat',
+            models: ['LongCat-Flash-Chat', 'LongCat-Flash-Lite'],
+            autoModels: '   ',
+          },
+        },
+        default_provider: 'longcat',
+      };
+
+      const result = resolveProvider(config, 'longcat/auto');
+
+      expect(result.name).toBe('longcat');
+      expect(['LongCat-Flash-Chat', 'LongCat-Flash-Lite']).toContain(result.realModel);
     });
   });
+});
 
   describe('ConfigManager', () => {
     it('should expose getConfig function', () => {

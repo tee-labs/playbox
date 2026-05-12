@@ -35,6 +35,7 @@ export interface ProviderConfig {
   endpoint: string;
   key: string;
   models: string[];
+  autoModels?: string; // Comma-separated model IDs for "auto" resolution; empty = random from models
   authType?: AuthType; // Optional: defaults to 'header' for Anthropic, 'bearer' for OpenAI
 }
 
