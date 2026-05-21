@@ -40,8 +40,19 @@ export function resolveProvider(config: Config, model: string, family?: Protocol
     // Provider doesn't exist or model not in list - fall through to legacy mode
   }
 
-  // Bare "auto" → resolve from default provider
+  // Bare "auto" → resolve from default provider (respect family filter if provided)
   if (model === 'auto') {
+    // If family is specified, find a provider of that family
+    if (family) {
+      for (const [name, p] of Object.entries(config.providers)) {
+        if (p.family === family) {
+          const resolvedModel = resolveAutoModel(p);
+          return { name, provider: p, realModel: resolvedModel };
+        }
+      }
+      throw new Error(`No provider found for family: ${family}`);
+    }
+    // No family filter - use default provider
     const providerName = config.default_provider;
     const provider = config.providers[providerName];
     const resolvedModel = resolveAutoModel(provider);
@@ -70,7 +81,10 @@ export function resolveProvider(config: Config, model: string, family?: Protocol
 function resolveAutoModel(provider: ProviderConfig): string {
   const autoModelsStr = provider.autoModels?.trim();
   const pool = autoModelsStr
-    ? autoModelsStr.split(',').map(m => m.trim()).filter(Boolean)
+    ? autoModelsStr
+        .split(',')
+        .map((m) => m.trim())
+        .filter(Boolean)
     : provider.models || [];
 
   if (pool.length === 0) {
