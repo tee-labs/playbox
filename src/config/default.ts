@@ -10,10 +10,11 @@ export interface Config {
 }
 
 async function loadProvidersFromD1(db: SqlClient): Promise<Config | null> {
-
   try {
     const { results } = await db
-      .prepare('SELECT name, type, family, endpoint, key, models, auth_type, auto_models FROM providers WHERE enabled = 1 ORDER BY sort_order ASC')
+      .prepare(
+        'SELECT name, type, family, endpoint, key, models, auth_type, auto_models FROM providers WHERE enabled = 1 ORDER BY sort_order ASC'
+      )
       .bind()
       .all();
 
@@ -64,7 +65,7 @@ const _loadConfigFromD1 = async (): Promise<Config | null> => {
 export const getDefaultConfigCached = unstable_cache(
   _loadConfigFromD1,
   ['config-default'], // cache key prefix
-  { tags: ['config-default'], revalidate: 3600 } // 1 hour TTL
+  { tags: ['config-default'], revalidate: 600 } // 10 minutes TTL
 );
 
 export async function getDefaultConfig(): Promise<Config> {
